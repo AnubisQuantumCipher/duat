@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "home": "/home/YOUR_USER",
+  "state": "/home/YOUR_USER/.local/state/project-vault",
+  "mount": "/home/YOUR_USER/iPad",
+  "root": "/home/YOUR_USER/iPad/TryOmarchy",
+  "vault_id": "REPLACE_WITH_YOUR_VAULT_ID",
+  "require_ifuse_mount": true,
+  "project_roots": ["/home/YOUR_USER/Projects", "/home/YOUR_USER/Work"],
+  "additional_paths": [],
+  "reserve_bytes": 10000000000,
+  "local_reserve_bytes": 10000000000,
+  "wait_for_scripts": []
+}

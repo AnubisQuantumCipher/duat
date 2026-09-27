@@ -1,0 +1,10 @@
+[Unit]
+Description=Restore complete Anubis scope with verification
+After=ipad-storage.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/Projects/duat/drill.py
+TimeoutStartSec=infinity
+Nice=10
+UMask=0077

@@ -1,0 +1,10 @@
+[Unit]
+Description=Project Vault scrub schedule
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=true
+Unit=project-vault-scrub.service
+
+[Install]
+WantedBy=timers.target

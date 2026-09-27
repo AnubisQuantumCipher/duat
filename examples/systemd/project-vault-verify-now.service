@@ -1,0 +1,13 @@
+[Unit]
+Description=Verify iPad repository and attempt complete Anubis recovery after backup
+After=project-vault-backup.service ipad-storage.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/Projects/duat/scrub.py
+ExecStart=/usr/bin/python3 %h/Projects/duat/drill.py
+TimeoutStartSec=infinity
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+UMask=0077

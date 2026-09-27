@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry enrolled project offloads when iPad is available
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=10min
+Unit=project-vault-tier.service
+
+[Install]
+WantedBy=timers.target

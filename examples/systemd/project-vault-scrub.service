@@ -1,0 +1,10 @@
+[Unit]
+Description=Project Vault scrub
+After=ipad-storage.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/Projects/duat/scrub.py
+UMask=0077
+Nice=10
+TimeoutStartSec=infinity

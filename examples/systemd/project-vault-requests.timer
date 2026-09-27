@@ -1,0 +1,10 @@
+[Unit]
+Description=Project Vault requests schedule
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1min
+Unit=project-vault-requests.service
+
+[Install]
+WantedBy=timers.target

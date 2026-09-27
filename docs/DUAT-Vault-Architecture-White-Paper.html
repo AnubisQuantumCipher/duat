@@ -1,0 +1,959 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DUAT Vault architecture, verified offload, and project recovery handbook."><title>DUAT Vault — Architecture White Paper</title><style>
+:root{--ink:#152c40;--muted:#53697a;--blue:#173e59;--paper:#fff;--ground:#eaf0f4;--line:#cedae2;--accent:#916029}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--ground);font:17px/1.75 Georgia,'Liberation Serif',serif}a{color:#145b83;text-decoration-thickness:1px;text-underline-offset:3px}a:focus-visible,summary:focus-visible{outline:3px solid #b17b37;outline-offset:4px}.cover{background:var(--blue);color:white;padding:75px max(6vw,24px) 45px;position:relative;overflow:hidden}.cover-inner{max-width:1100px;margin:auto}.eyebrow{font:700 12px/1.6 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#d7bd94}.cover h1{font:400 clamp(64px,10vw,132px)/1 Georgia,serif;letter-spacing:-.055em;margin:24px 0 14px}.subtitle{font:400 clamp(21px,3vw,33px)/1.25 Arial,sans-serif;max-width:680px}.cover p{max-width:700px;color:#d7e4ee}.seal{display:flex;gap:12px;align-items:center;border-top:1px solid #547187;margin-top:35px;padding-top:20px;font:12px/1.5 Arial,sans-serif;letter-spacing:.06em}.seal svg{flex-shrink:0}.layout{display:grid;grid-template-columns:265px minmax(0,920px);gap:32px;max-width:1300px;margin:35px auto;padding:0 24px}aside{font:13px/1.5 Arial,sans-serif;position:sticky;top:20px;align-self:start;max-height:94vh;overflow:auto;padding:14px 5px 20px}aside summary{font-weight:bold;letter-spacing:.09em;text-transform:uppercase;margin:0 0 15px;cursor:pointer}aside ul{list-style:none;padding:0;margin:0}aside li{margin:0;border-bottom:1px solid var(--line)}aside a{display:block;padding:8px 7px;color:var(--muted);text-decoration:none}aside a:hover{background:#d9e5ed;color:var(--ink)}main{background:var(--paper);padding:42px 54px 65px;min-width:0;box-shadow:0 3px 20px #173e5909}h2{font:400 32px/1.18 Georgia,serif;border-top:2px solid var(--line);padding-top:28px;margin:65px 0 24px;letter-spacing:-.025em;scroll-margin-top:24px}h3{font:700 19px/1.4 Arial,sans-serif;margin:32px 0 12px}p{margin:0 0 20px}blockquote{margin:28px 0;padding:17px 24px;border-left:4px solid var(--accent);background:#f3f6f8;font-size:20px;line-height:1.55}blockquote p:last-child{margin:0}code{font:12px/1.6 'DejaVu Sans Mono',monospace;overflow-wrap:anywhere;background:#eff3f6;padding:2px 4px}pre{background:#edf3f7;border:1px solid var(--line);padding:20px;overflow:auto;max-width:100%;font-size:12px;line-height:1.65}pre code{background:none;padding:0;overflow-wrap:normal;white-space:pre}table{width:100%;border-collapse:collapse;font:13px/1.6 Arial,sans-serif;min-width:560px}th{text-align:left;background:#e4edf3;color:var(--blue);padding:12px 13px;border-bottom:2px solid #afc3d1}td{padding:12px 13px;border-bottom:1px solid var(--line);vertical-align:top}tr:nth-child(even) td{background:#f8fafb}.table-scroll{overflow-x:auto;margin:25px 0;max-width:100%}td code{font-size:11px}li{margin:8px 0}figure{margin:28px 0 45px}figure svg{display:block;width:100%;height:auto}figcaption{font:12px/1.6 Arial,sans-serif;color:var(--muted);margin-top:12px}.intro-label{font:700 12px/1.5 Arial,sans-serif;color:var(--accent);letter-spacing:.12em;text-transform:uppercase}.footer{font:13px/1.7 Arial,sans-serif;padding:35px 24px;text-align:center;color:var(--muted)}.diagram text{font-family:Arial,sans-serif}.diagram .label{font-size:16px;font-weight:bold;fill:#173e59}.diagram .small{font-size:12px;fill:#53697a}.diagram .light{fill:#fff}.diagram .tiny{font-size:11px;fill:#53697a}@media(max-width:1050px){.layout{grid-template-columns:210px minmax(0,1fr);gap:16px}main{padding:30px}}@media(max-width:760px){.layout{display:block;padding:0 12px;margin:15px auto}aside{position:static;max-height:none;padding:16px}aside .toc{max-height:280px;overflow:auto}main{padding:25px 20px}.cover{padding:45px 24px 30px}h2{font-size:28px}body{font-size:16px}pre{padding:12px}blockquote{padding:15px}table{min-width:520px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{@page{size:A4;margin:18mm 16mm}body{background:white;font-size:10.5pt;line-height:1.5}.cover{background:white!important;color:#152c40;padding:28mm 0 20mm;break-after:page}.cover h1{font-size:72pt}.cover p,.eyebrow{color:#53697a}.cover .subtitle{font-size:25pt}.seal{border-color:#53697a}aside{display:none}.layout{display:block;margin:0;padding:0}main{padding:0;box-shadow:none}h2{font-size:22pt;break-after:avoid;margin-top:28pt}h3{break-after:avoid}pre{white-space:pre-wrap;overflow:visible;font-size:8pt;break-inside:avoid}pre code{white-space:pre-wrap;overflow-wrap:anywhere}table{min-width:0;font-size:8pt}.table-scroll{overflow:visible}tr{break-inside:avoid}thead{display:table-header-group}figure{break-inside:avoid}a{color:inherit}p{orphans:3;widows:3}.footer{display:none}}
+</style></head><body><header class="cover"><div class="cover-inner"><div class="eyebrow">DUAT Vault / storage architecture</div><h1>DUAT Vault</h1><div class="subtitle">Verified Project Storage<br>and Recovery</div><p>A technical white paper on the iPad-backed archive, the Linux working set, and the recovery checks that connect them.</p><div class="seal"><svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><path d="M18 2 33 10v16L18 34 3 26V10Z M3 10l15 9 15-9M18 19v15" fill="none" stroke="#d7bd94" stroke-width="1.5"/></svg><span>ARCHITECTURE &amp; OPERATOR HANDBOOK<br>Public architecture edition · Implementation: project-vault / restic</span></div></div></header><div class="layout"><aside aria-label="Table of contents"><details open><summary>In this paper</summary><div class="toc">
+<ul>
+
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#reading-guide-and-evidence-rules">Reading guide and evidence rules</a></li>
+<li><a href="#the-problem-the-system-solves">The problem the system solves</a></li>
+<li><a href="#the-daily-operating-model">The daily operating model</a></li>
+<li><a href="#goals-scope-and-boundaries">Goals, scope, and boundaries</a></li>
+<li><a href="#physical-and-transport-architecture">Physical and transport architecture</a></li>
+<li><a href="#logical-architecture">Logical architecture</a></li>
+<li><a href="#storage-layout">Storage layout</a></li>
+<li><a href="#backup-engine-and-source-coverage">Backup engine and source coverage</a></li>
+<li><a href="#versioned-backup-lifecycle">Versioned backup lifecycle</a></li>
+<li><a href="#verified-offloading">Verified offloading</a></li>
+<li><a href="#retrieval-and-ordinary-snapshot-recovery">Retrieval and ordinary snapshot recovery</a></li>
+<li><a href="#catalog-provenance-and-agent-memory">Catalog, provenance, and agent memory</a></li>
+<li><a href="#concurrency-scheduling-and-recovery-coordination">Concurrency, scheduling, and recovery coordination</a></li>
+<li><a href="#dashboard-and-local-security-model">Dashboard and local security model</a></li>
+<li><a href="#verification-hierarchy">Verification hierarchy</a></li>
+<li><a href="#capacity-management-and-performance-economics">Capacity management and performance economics</a></li>
+<li><a href="#failure-model-and-response">Failure model and response</a></li>
+<li><a href="#recovery-procedures">Recovery procedures</a></li>
+<li><a href="#confidentiality-and-trust">Confidentiality and trust</a></li>
+<li><a href="#remaining-work-and-design-priorities">Remaining work and design priorities</a></li>
+<li><a href="#reliability-revision-fixes-and-additions">Reliability revision: fixes and additions</a></li>
+<li><a href="#creating-recovery-space-through-verified-offload">Creating recovery space through verified offload</a></li>
+<li><a href="#appendix-implementation-map">Appendix: implementation map</a></li>
+<li><a href="#appendix-evidence-locations-and-interpretation">Appendix: evidence locations and interpretation</a></li>
+<li><a href="#appendix-command-reference">Appendix: command reference</a></li>
+<li><a href="#glossary">Glossary</a></li>
+<li><a href="#references-and-maintenance-of-this-paper">References and maintenance of this paper</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+</details></aside><main id="paper"><div class="intro-label">System overview</div><figure aria-labelledby="system-caption"><svg class="diagram" viewBox="0 0 780 460" role="img" aria-labelledby="diagram-title diagram-desc"><title id="diagram-title">DUAT working set, archive and recovery architecture</title><desc id="diagram-desc">Linux keeps active source and tools. The project vault verifies candidates through restic and accesses the iPad archive via ifuse, an SSH USB bridge, and the Mac cable. Recovery returns archived files to new local storage. Receipts are retained on both endpoints.</desc><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8Z" fill="#916029"/></marker></defs><rect x="1" y="1" width="778" height="458" fill="#f5f8fa" stroke="#cedae2"/><rect x="25" y="30" width="300" height="115" rx="5" fill="#173e59"/><text x="45" y="61" class="label light">Linux • active working set</text><text x="45" y="88" class="small light">Source, compiler pins, live builds</text><text x="45" y="112" class="small light">Unique evidence stays available locally</text><rect x="455" y="30" width="300" height="115" rx="5" fill="#173e59"/><text x="475" y="61" class="label light">iPad • retained archive</text><text x="475" y="88" class="small light">Documents / TryOmarchy / Repository</text><text x="475" y="112" class="small light">Versioned snapshots + recovery records</text><path d="M325 63 H449" fill="none" stroke="#916029" stroke-width="2" marker-end="url(#arrow)"/><text x="350" y="51" class="tiny">SAVE</text><path d="M455 124 H331" fill="none" stroke="#916029" stroke-width="2" marker-end="url(#arrow)"/><text x="349" y="112" class="tiny">RECOVER</text><rect x="25" y="190" width="730" height="78" rx="5" fill="#e5eef4" stroke="#cedae2"/><text x="45" y="220" class="label">The connection path</text><text x="45" y="245" class="small">restic → ifuse → SSH Unix socket → Mac usbmuxd → USB → iPad app</text><path d="M175 145 V184 M605 145 V184" stroke="#916029" stroke-width="2" marker-end="url(#arrow)"/><rect x="25" y="300" width="730" height="127" rx="5" fill="white" stroke="#cedae2"/><text x="45" y="331" class="label">The retirement gate</text><text x="45" y="359" class="small">Full candidate restore → SHA-256 + metadata comparison → receipt readback</text><text x="45" y="383" class="small">Recheck activity and pins → quarantine → compare → retire local original</text><text x="45" y="409" class="tiny">Offloaded data has one physical archive device. Whole-scope recovery remains a separate test.</text></svg><figcaption id="system-caption">Architecture overview. The arrows describe file movement and recovery, not measured bandwidth. Automatic backups and explicit local retirement are separate workflows.</figcaption></figure>
+
+<p><strong>Architecture white paper and operator handbook</strong><br />
+Public architecture edition · Implementation: <code>project-vault</code> · Backup engine: <strong>restic</strong></p>
+<blockquote>
+<p><strong>The operating principle:</strong> keep the active engineering working set on Linux; preserve versioned history on the iPad; retire an eligible local directory only after restoring its complete archived contents and comparing them with the source.</p>
+</blockquote>
+<h2 id="abstract">Abstract</h2>
+<p>DUAT Vault provides versioned project backup, explicit verified offload, and recovery for Linux using an iPad application-sharing archive. The executable is named <code>project-vault</code>.</p>
+<p>The system combines restic snapshots, ifuse transport, a compact local catalog, persistent offload and retrieval queues, protective pins, provenance records, and a loopback dashboard. Ordinary backups preserve versions without deleting working files. Explicit offloads archive an eligible directory, restore its complete contents into local scratch, compare content and metadata, and then retire the original through a guarded quarantine procedure.</p>
+<p>This publication describes the source implementation and its operating boundaries. It contains no deployment inventory or production recovery receipts. A successful fixture test does not establish recovery for a reader's archive. After offload, the iPad may be the sole archive copy; a separate independent archive is needed to withstand its loss.</p>
+<h2 id="reading-guide-and-evidence-rules">Reading guide and evidence rules</h2>
+<p>Read <strong>The daily operating model</strong> for routine use, <strong>Verified offloading</strong> for retirement safeguards, and <strong>Recovery procedures</strong> before restoring data.</p>
+<p>Paths and commands are examples or implementation defaults. Replace placeholders with configuration appropriate to your installation. No example item or snapshot identifier refers to a real archive. This publication omits personal account information, hardware inventory, storage measurements, operational history, and production identifiers.</p>
+<p>A receipt is a record of an operation. Its scope and method bound the claim it supports. Metadata checking, full repository data reading, candidate restore comparison, whole-scope file restoration, and application recovery are different tests. Historical success never substitutes for a current check.</p>
+<p>Agent notes provide continuity but are not primary recovery evidence. External documentation describes upstream behavior and does not certify this wrapper.</p>
+<h2 id="the-problem-the-system-solves">The problem the system solves</h2>
+<p>Anubis development produces more than source code. Compiler builds, isolated Cargo targets, incremental state, temporary worktrees, pinned toolchains, proof outputs, test artifacts, and agent campaigns all consume storage. Isolation can be justified: competing agents should not corrupt one another’s outputs, and a claim may depend on a particular binary or proof receipt. However, an abandoned target directory can remain large long after its campaign ends.</p>
+<p>A backup does not inherently solve that growth. If Linux retains all original outputs while restic stores another version on the iPad, Linux remains occupied. Backup alone does not reduce the local working set. Something must make an explicit decision about the local working set and safely remove eligible originals.</p>
+<p>Conversely, deleting every directory named <code>target</code> or <code>.cache</code> would be unsound. A cache can contain the only surviving historical executable, a pin used to reproduce a claim, a unique receipt, or an active compiler’s work. DUAT therefore treats names as discovery hints and requires classification of the exact candidate.</p>
+<p>An iPad with sufficient free space can serve as an archive endpoint. Its practical role is an archive endpoint reached through application file sharing. Active Linux tools and source remain on the Linux filesystem, where their execution and filesystem assumptions hold. Retrieval is explicit: an agent locates an archived item, restores it locally, and resumes work from the recovered directory.</p>
+<h2 id="the-daily-operating-model">The daily operating model</h2>
+<h3 id="while-working">While working</h3>
+<p>Keep source repositories, active worktrees, current compiler pins, unique binaries, identities, proof receipts, and the evidence needed to reproduce claims on Linux. Pin active output lanes before long builds. Record where a campaign writes temporary data. Run the storage status helper before initiating a large new workload.</p>
+<p>Hourly scheduled backups preserve configured project scopes. They add or reuse versioned restic content; they do not automatically remove the working files. A successful Anubis scope is not a blanket success for every project.</p>
+<h3 id="when-a-campaign-finishes">When a campaign finishes</h3>
+<p>Identify the exact inactive output directory. Confirm that its source, toolchain identity, and regeneration route are retained. Prefer a verified incremental-cache child when its parent also contains binaries or evidence that must stay local. Enroll the reviewed directory or invoke <code>put --offload</code> directly. The candidate-specific recovery comparison happens before local removal.</p>
+<p>A normal successful offload leaves a local item record and a small sibling receipt, plus recovery metadata on the iPad. The original directory is absent. Linux free-space readings are recorded around the operation, with concurrent-workload limitations stated.</p>
+<h3 id="when-an-agent-needs-something-again">When an agent needs something again</h3>
+<p>Search the compact catalog or cold-item inventory. With the iPad available, retrieve the item by ID into a new local destination. An existing path is protected from overwrite. If a compiler has recreated the original cache, restore the older archive elsewhere. A previous receipt never authorizes deleting newly generated contents at the same path.</p>
+<h3 id="when-disconnected">When disconnected</h3>
+<p>Local source remains usable. Local records can still reveal what was archived and where it belonged. Archive bytes cannot be retrieved until the bridge and iPad mount return. The system does not transparently page missing files across the cable, and a symlink is not a substitute for recovery.</p>
+<h2 id="goals-scope-and-boundaries">Goals, scope, and boundaries</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Implemented approach</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Versioned project history</td>
+<td>Tagged restic snapshots and source maps</td>
+<td>Configured scope, not the entire machine</td>
+</tr>
+<tr>
+<td>Linux storage reclamation</td>
+<td>Explicit full-compare directory offload</td>
+<td>Reviewed candidates only</td>
+</tr>
+<tr>
+<td>Agent discoverability</td>
+<td>Local catalog, receipts, CLI, skill, dashboard</td>
+<td>Compact catalog omits deep entries</td>
+</tr>
+<tr>
+<td>Recovery</td>
+<td>Snapshot restore and manifest-checked cold retrieval</td>
+<td>Requires iPad, credential, and local space</td>
+</tr>
+<tr>
+<td>Activity protection</td>
+<td>Pins, process inspection, Cargo lock where applicable</td>
+<td>Cooperative workflow still required</td>
+</tr>
+<tr>
+<td>Interrupted work</td>
+<td>Persistent jobs, queue states, removal-intent receipts</td>
+<td>No universal transactional rollback</td>
+</tr>
+<tr>
+<td>Data health</td>
+<td>Metadata checks, scheduled full scrub, restore drill</td>
+<td>Last receipt and scope govern each claim</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td>Keep snapshots; pruning disabled</td>
+<td>Storage growth still needs management</td>
+</tr>
+<tr>
+<td>Disaster resilience</td>
+<td>Archive and recovery material on iPad</td>
+<td>No independent archive destination</td>
+</tr>
+</tbody>
+</table></div>
+<p>DUAT is not a raw iPad disk driver, a bootable Linux image, an application-consistent backup of every database, an immutable remote vault, a hostile-user security boundary, or an automatic filesystem tier that makes arbitrary absent paths readable on demand. These boundaries determine which engineering tasks it can safely support.</p>
+<h2 id="physical-and-transport-architecture">Physical and transport architecture</h2>
+<p>The archive is accessed through an iPad application's file-sharing interface. Linux uses ifuse to expose that application directory as a filesystem. Restic operates on the configured repository below the mount.</p>
+<pre><code class="language-text">Linux working set
+  -&gt; project-vault / restic
+  -&gt; configured ifuse mount
+  -&gt; paired iPad application file sharing
+  -&gt; archive repository and recovery records
+</code></pre>
+<p>A Linux virtual machine may access a host's USB multiplexing service through an SSH Unix-socket bridge. Configure host, user, port, socket path, pairing, and reconnect behavior for the actual environment. The bridge and mount supervisor are external infrastructure, not installed by this repository.</p>
+<p>The mount must be a functioning ifuse mount with the expected vault marker. A directory with the expected name is insufficient: the destination guard refuses access when the mount or identity check fails. Pairing, device unlock state, application access, and transport availability can each prevent access.</p>
+<p>ifuse supports application Documents sharing through its <code>--documents</code> option. This is application-scoped access rather than a raw iPad disk export. See <a href="https://github.com/libimobiledevice/ifuse">ifuse documentation</a>.</p>
+<h3 id="performance-boundaries">Performance boundaries</h3>
+<p>No device specification or transfer benchmark is published here. Cable capability alone does not determine throughput across SSH, usbmuxd, file sharing, FUSE, hashing, encryption, and local restore writes. Measure sequential transfer, metadata-heavy operations, backup, full readback, and full candidate recovery separately in the intended environment.</p>
+<h2 id="logical-architecture">Logical architecture</h2>
+<pre><code class="language-text">                              OWNER / AGENTS
+                                    |
+             +----------------------+--------------------+
+             |                      |                    |
+        project-vault CLI      browser dashboard    agent skill / notes
+             |                      |                    |
+             +---------- explicit requests -------------+
+                                    |
+             +----------------------+--------------------+
+             |                      |                    |
+       scope scheduler        cold-item engine      retrieval worker
+       versioned backup       verify / retire       recover / publish
+             |                      |                    |
+             +----------- shared operation lock --------+
+                                    |
+                               restic engine
+                                    |
+                         iPad TryOmarchy/Repository
+                                    |
+                          encrypted archive content
+
+LOCAL CONTROL RECORDS                       IPAD RECOVERY RECORDS
+catalog.sqlite                              Recovery/items/*.json
+items, queue, pins, requests                 source maps / configuration
+provenance, operation state                  check and reclaim receipts
+password file                               recovery password / Tools
+</code></pre>
+<p>The data plane is restic reading source files and writing or reading repository data. The control plane is the Python wrapper, its queues and locks, systemd schedules, and UI. The recovery plane is the metadata that connects an original path to a snapshot, manifest, item ID, and retrieval procedure.</p>
+<p>Separating these concerns matters. Losing the local catalog should not be equivalent to losing the archive. Conversely, a catalog entry by itself does not contain the archived bytes. A timer expresses an intention to run; it does not establish that data was saved. A recovery receipt connects an operation to its result, but must still be interpreted with its time and verification method.</p>
+<h2 id="storage-layout">Storage layout</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/Projects/duat/</code></td>
+<td>Python implementation, dashboard, tests, operational documentation</td>
+</tr>
+<tr>
+<td><code>~/.local/bin/project-vault</code></td>
+<td>CLI entry point</td>
+</tr>
+<tr>
+<td><code>~/.config/project-vault/config.json</code></td>
+<td>Mount, repository root, source selection, reserve and policy configuration</td>
+</tr>
+<tr>
+<td><code>~/.local/state/project-vault/</code></td>
+<td>Local catalog, queues, receipts, journals, caches, recovery scratch, credential</td>
+</tr>
+<tr>
+<td><code>~/.config/systemd/user/project-vault-*</code></td>
+<td>Backup, offload, retrieval, dashboard, scrub and drill units</td>
+</tr>
+<tr>
+<td><code>~/.codex/skills/project-vault/</code></td>
+<td>Agent-facing storage workflow and helper scripts</td>
+</tr>
+<tr>
+<td><code>~/iPad/TryOmarchy/Repository/</code></td>
+<td>restic repository</td>
+</tr>
+<tr>
+<td><code>~/iPad/TryOmarchy/Recovery/</code></td>
+<td>Recovery records, configuration, source maps, tools and credential</td>
+</tr>
+<tr>
+<td><code>~/iPad/TryOmarchy/Archives/</code></td>
+<td>Legacy archive material from earlier transfer work</td>
+</tr>
+<tr>
+<td><code>~/Documents/DUAT-Vault-Architecture-White-Paper.md</code></td>
+<td>Editable source of this paper</td>
+</tr>
+<tr>
+<td><code>~/Documents/DUAT-Vault-Architecture-White-Paper.html</code></td>
+<td>Standalone reading and printing edition</td>
+</tr>
+</tbody>
+</table></div>
+<p>Files in <code>Repository</code> are managed by restic. They are not a human-browsable mirror of project directories. The Documents app may show repository folders and packs instead of familiar source trees. Use <code>find</code>, <code>items</code>, and recovery commands to locate and recover content. Never rearrange or selectively delete repository packs in the iPad’s file interface.</p>
+<p>The local SQLite catalog contains snapshot metadata, selected file paths, and events. Separate JSON records preserve cold-item identity and operation states. The state directory also holds the restic cache and temporary verification trees, which can themselves consume Linux storage.</p>
+<h2 id="backup-engine-and-source-coverage">Backup engine and source coverage</h2>
+<p>The backup engine is restic. Confirm compatibility with the commands used by the implementation before deployment.</p>
+<p>Restic supplies encrypted, deduplicated snapshot storage. DUAT supplies source selection, coordination, verification policy, retirement, and user-facing records around it. Snapshot identities are important recovery addresses. The wrapper retains explicit IDs rather than relying exclusively on a global “latest.” Upstream restic documents snapshot inspection, grouping, and repository operations. <a href="https://restic.readthedocs.io/en/stable/045_working_with_repos.html">restic repository documentation</a></p>
+<h3 id="how-the-source-set-is-formed">How the source set is formed</h3>
+<p>The example configuration names <code>~/Projects</code> and <code>~/Work</code> as project roots; additional paths are operator-selected. Source discovery resolves relevant targets, discovers registered Git worktrees and common Git metadata, removes redundant nested source roots, and records the mapping between intended inputs and stored paths.</p>
+<p>This is important for linked worktrees. Saving the visible checkout without its shared Git metadata may leave an incomplete development environment. It is also important for installed launchers that resolve to actual executable locations. Discovery is not a promise to back up every linked payload in every custom application; inspect the source map for the particular snapshot.</p>
+<p>An application-specific configuration can cover source, external worktrees, configuration, installed tools, and state. Missing configured paths are skipped. A missing path that was deliberately offloaded is different from an accidentally missing source; its cold receipt is the recovery address.</p>
+<p>The wrapper does not apply a blanket build-output exclusion. That choice preserves data broadly but can make scope snapshots large. Reviewed offloading and working-set management are still necessary.</p>
+<h3 id="what-coverage-does-not-establish">What coverage does not establish</h3>
+<p>The configured roots do not make this a whole-home or whole-operating-system image. Arbitrary folders added elsewhere are not automatically protected. Add documents to <code>additional_paths</code> explicitly if they need coverage; recovery-kit export also looks for the named architecture papers in Documents. Other Documents files are not automatically covered; placement in Documents alone is insufficient.</p>
+<p>Backing up application source does not establish consistent recovery of its live databases. Use application-native continuity procedures for those stores.</p>
+<p>Active source can change during an ordinary backup. A resulting filesystem snapshot is not necessarily an atomic application transaction or a simultaneously frozen dependency group. For a reproducibility claim, record the exact snapshot, commit, toolchain, relevant artifacts, and verification procedure; coordinate a quiet checkpoint where the application requires it.</p>
+<h2 id="versioned-backup-lifecycle">Versioned backup lifecycle</h2>
+<p>An ordinary backup checks destination availability and identity, acquires the local operation lock, discovers sources, checks the iPad reserve, and invokes restic. The backup command uses scope tags, <code>--skip-if-unchanged</code>, and grouping by <code>host,paths,tags</code>. It then performs a repository metadata check and refreshes the local catalog. Source maps are saved locally and into recovery storage.</p>
+<p>Including tags in grouping fixes a concrete issue discovered during operation: identical roots under different scopes could otherwise reuse an unchanged comparison group without yielding a snapshot belonging to the expected new scope. The wrapper now also rejects the absence of a matching snapshot with a clear error instead of treating a missing ID as valid.</p>
+<p>The scheduled runner processes Anubis as its extended scope, then separate project scopes and Work. Each scope has an independent health entry. An unreadable source can make one scope incomplete while unrelated scopes continue. Busy, disconnected, or repository-lock conditions defer work. Previous successful snapshot references are retained where available.</p>
+<p>A <code>passed</code> scope health record says that a snapshot was saved and repository metadata checked. It is not equivalent to reading every stored byte or restoring the entire project. The scheduler may exit without every scope becoming current; inspect scope records and timestamps rather than relying only on service exit state.</p>
+<h2 id="verified-offloading">Verified offloading</h2>
+<p>Verified offloading is the defining storage-reclamation operation. <code>project-vault put PATH</code> archives and fully compares a candidate while retaining its source. Adding <code>--offload</code> permits the guarded local retirement after comparison succeeds.</p>
+<h3 id="eligibility-and-admission">Eligibility and admission</h3>
+<p>A candidate must be an existing real directory strictly below Projects, Work, or <code>.cache</code>. Symlink roots or path components are refused. Repository/worktree roots and nested Git metadata are refused. Special filesystem objects are rejected by inventory. Pins protect both descendants and ancestors through overlap checks, so an agent cannot evade a pinned child by selecting its parent.</p>
+<p>Activity inspection checks relevant processes’ working directories, executables, file descriptors, and mapped files through a read-only privileged process scan. If the scan cannot safely inspect a relevant live process, the operation refuses. For an exact <code>debug/incremental</code> or <code>release/incremental</code> candidate, the implementation also acquires the existing Cargo profile lock. A missing or symlinked lock file is not treated as permission to proceed.</p>
+<p>CLI pin edits now share <code>pins.lock</code> with the final validation, quarantine, and deletion window. A pin accepted before final retirement is observed there; a request arriving after the window begins waits and cannot undo a completed offload. Concurrent pin edits no longer lose each other’s updates. Direct manual JSON edits bypass this protocol. These mechanisms reduce races. They do not make arbitrary concurrent writers safe. Agents must still coordinate ownership and pin active lanes. The privileged scan executes local Python code; the overall design assumes trusted local code and agents, not an adversarial user modifying that code.</p>
+<p>Local free space must accommodate the complete verification restore plus the configured/default working reserve. Local and archive reserves come from configuration, with a local fallback in the implementation. The admission estimate uses logical file sizes rather than an optimistic assumption about deduplication savings. A very large directory can therefore be ineligible even when storing its new archive blocks would be cheap.</p>
+<h3 id="the-manifest">The manifest</h3>
+<p>The candidate inventory records regular-file contents with SHA-256, sizes, file modification timestamps, permission modes, owners, groups, extended attributes, directory entries including empty directories, and symbolic-link targets. It checks whether a file’s identity, size, or timestamps changed while hashing. A digest of the full manifest is retained with the cold-item receipt.</p>
+<p>The comparison does not establish every conceivable filesystem property. Hardlink topology, sparse allocation layout, access/change timestamps as restored properties, and directory modification times are not covered by the manifest in the same way as regular-file bytes. The term “full comparison” means the entire candidate is compared under this implemented inventory schema. It does not imply a bitwise image of the source filesystem.</p>
+<h3 id="transfer-and-verification-sequence">Transfer and verification sequence</h3>
+<pre><code class="language-text">review exact candidate + retained provenance
+                 |
+validate path / pins / activity / Cargo guard / free space
+                 |
+record complete source manifest
+                 |
+create uniquely tagged restic cold snapshot
+                 |
+restore entire candidate into local verification scratch
+                 |
+compare restored inventory AND current source to manifest
+                 |
+confirm mount identity; persist local + iPad receipt; read back
+                 |
+     put only: retain original and finish
+                 |
+     --offload: recheck activity and pins
+                 |
+persist removal intent -&gt; no-replace rename to quarantine
+                 |
+recheck quarantine manifest / activity / recreated source / mount
+                 |
+remove exact quarantine -&gt; record completion and reclamation
+</code></pre>
+<p>The snapshot receives a <code>cold-&lt;item-id&gt;</code> tag, and the implementation requires the expected tagged snapshot rather than guessing a global latest snapshot. A job directory tied to the source path preserves information about an interrupted transfer. When the recorded source manifest still matches, an interrupted verification restore can reuse its snapshot and partial scratch tree. Changed inputs require a new candidate identity.</p>
+<p>The recovery restore uses restic verification and sparse restoration. The wrapper independently inventories the recovered directory and compares it with the original inventory. It also inventories the current source again, rejecting changes that occurred after initial inspection. Upstream restic describes verified restoration and recovery into a selected target; the manifest comparison is additional local implementation behavior. <a href="https://restic.readthedocs.io/en/stable/050_restore.html">restic restore documentation</a></p>
+<p>Before local retirement, recovery receipts are written locally and to the iPad, and the remote JSON is read back for equality. The mount’s identity is checked again. These are useful observable gates; they are not a guarantee about the iPad’s physical flash durability under every possible power failure.</p>
+<h3 id="quarantine-and-crash-boundaries">Quarantine and crash boundaries</h3>
+<p>A removal-intent record identifies the original and the proposed quarantine before the source is renamed. Linux <code>renameat2</code> with no-replace semantics prevents accidental replacement of an existing quarantine destination. The renamed directory remains on the same local filesystem while the wrapper performs its final comparison and activity checks.</p>
+<p>If a failure occurs before deletion begins, the implementation can attempt to return the quarantine to the original name. Once recursive deletion begins, a failure may leave a partial quarantine and a recovery-required record. It would be incorrect to say every possible failure leaves the original intact. The verified archive is the recovery source in that state. Preserve the remaining quarantine until a complete restoration has been recovered and checked into a separate path.</p>
+<p>JSON updates now use a uniquely named temporary sibling file, file flush and fsync, replacement, and parent-directory fsync where supported. Unique names prevent concurrent writers from colliding over one temporary filename. App/FUSE filesystems can reject directory fsync as unsupported; the implementation tolerates only those specific unsupported-operation errors and surfaces other I/O errors. These updates do not make the collection of records, renames, and deletions one transaction, or prove iPad flash durability after sudden power loss.</p>
+<h3 id="what-counts-as-reclaimed">What counts as reclaimed</h3>
+<p>A final offload receipt records the item ID, source path, snapshot and tag, manifest digest, provenance, state, and free-space samples. The current implementation also records checks for absence of the original, quarantine, and generated verification scratch, plus a free-space comparison indicator. Earlier receipts may predate some fields.</p>
+<p>Path retirement and global free-space change answer different questions. Another build can consume space while an offload frees it. Sparse files, open deleted files, and unrelated writes can also affect observed disk usage. The sampled filesystem delta is useful operational evidence, but is not a precise attribution of every byte to the candidate. Do not equate logical source size with guaranteed physical reclamation.</p>
+<h2 id="retrieval-and-ordinary-snapshot-recovery">Retrieval and ordinary snapshot recovery</h2>
+<p>Cold-item retrieval uses <code>project-vault get ITEM_ID</code> or an original path recorded in the item index. An explicit ID is preferable when several historical versions share a path. With <code>--to</code>, the destination must be new. The cold retrieval path checks local capacity, restores the snapshot into temporary local storage, inventories the recovered candidate, compares the manifest digest with the item receipt, and publishes the recovered directory using a no-replace rename.</p>
+<p>Restoring to the original path records a restored-local state. Restoring elsewhere records where and when that happened without pretending the original path is now present. A returned item is not automatically re-enrolled for eviction. Its next lifecycle decision belongs to the active workflow.</p>
+<p>Ordinary <code>project-vault restore SNAPSHOT PATH --to NEW_DIRECTORY</code> supports recovery of a selected path from versioned snapshots. It validates membership, refuses an existing destination, escapes literal path matching, and uses restic’s restore verification. The original absolute hierarchy appears below the new destination. This command does not use the cold candidate’s full manifest gate. Do not describe these restore modes as identical.</p>
+<p>A missing local catalog hit is not evidence that a file was never backed up. Use an online full metadata search and the actual source maps. If recovery reports a mismatch, preserve the error and receipt records for diagnosis; do not waive the comparison merely because the filename looks correct. The cold retrieval helper uses temporary storage that is cleaned on failure, so retaining failed restored bytes requires a separately planned diagnostic procedure.</p>
+<h2 id="catalog-provenance-and-agent-memory">Catalog, provenance, and agent memory</h2>
+<h3 id="compact-local-catalog">Compact local catalog</h3>
+<p>The first broad file catalog grew enough to become a storage problem of its own. The compact design now bounds indexed rows and avoids descending into deep output-heavy path categories for indexing purposes. The implementation caps total file rows at <code>100000</code>, scope rows at <code>10000</code>, and indexed path depth at <code>9</code>; it omits descendants of target-style build directories, <code>.git</code>, <code>node_modules</code>, incremental state, fingerprints, and dependency directories from the compact working view.</p>
+<p>This is a storage bound, not necessarily a traversal-time bound: the restic listing may still be traversed. Snapshot metadata and cold-item receipts remain separate.</p>
+<p>Offline search is fast and intentionally incomplete. Search hits carry their own snapshot identities. Online <code>find</code> asks restic for complete filename metadata. A global latest snapshot can belong to another project, so use the snapshot associated with the desired hit or scope.</p>
+<h3 id="provenance-records">Provenance records</h3>
+<p>Provenance associates a candidate with a source repository, current commit, dirty status, a declared rebuild command, and a toolchain identity. Reviewed incremental-cache records also retained dependency-file evidence and its digest.</p>
+<p>A current clean checkout and plausible regeneration route do not prove the exact historical compiler invocation that produced old bytes. The records explicitly preserve that distinction. The archive retains the original bytes; the recipe gives a route for future regeneration. Rebuilding and retrieving are different operations, especially where a proof claim cites a historical executable.</p>
+<h3 id="agent-skills-and-notes">Agent skills and notes</h3>
+<p>The project-vault skill tells agents to check space before heavy work, classify candidates, honor pins, use verified offload, and search or retrieve archived dependencies. Agent notes point successors to the procedure and durable evidence locations. Neither replaces the receipts, manifests, or repository.</p>
+<p>Memory notes must not contain credentials. An agent should report whether it actually restored an artifact, merely found a catalog entry, or only recalled a note. These distinctions prevent a confident narrative from being mistaken for recovered evidence.</p>
+<h2 id="concurrency-scheduling-and-recovery-coordination">Concurrency, scheduling, and recovery coordination</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>operation.lock</code></td>
+<td>Serializes cooperating repository operations on Linux</td>
+</tr>
+<tr>
+<td><code>scheduler.lock</code></td>
+<td>Prevents overlapping scheduled backup runners</td>
+</tr>
+<tr>
+<td><code>tier-queue.lock</code></td>
+<td>Prevents overlapping offload workers</td>
+</tr>
+<tr>
+<td><code>queue-edit.lock</code></td>
+<td>Serializes short persistent queue edits</td>
+</tr>
+<tr>
+<td><code>pins.lock</code></td>
+<td>Serializes CLI pin edits with final local retirement</td>
+</tr>
+<tr>
+<td><code>requests.lock</code></td>
+<td>Prevents overlapping retrieval workers</td>
+</tr>
+<tr>
+<td>Cargo <code>.cargo-lock</code></td>
+<td>Coordinates supported incremental-cache candidates with Cargo</td>
+</tr>
+<tr>
+<td>restic repository locks</td>
+<td>Repository-level concurrency coordination</td>
+</tr>
+</tbody>
+</table></div>
+<p>Queue enrollment captures path identity, including device and inode. A reused pathname whose identity changed needs review. Active duplicate requests are avoided. Cancellation refuses to pretend an already running task was stopped. The offload worker retries explicit reviewed entries; it does not discover arbitrary directories and delete them according to age.</p>
+<p>A pause takes effect after the current directory completes. Retrieval requests can receive priority between offload items. Busy storage, lost connectivity, activity, inadequate reserve, or recognized repository-lock contention lead to waiting where handled. Unexpected verification failures require review rather than silent deletion.</p>
+<p>Stale-lock recovery is conservative. While holding the local operation lock, the scheduler reads repository lock metadata. Only a lock belonging to this hostname with a valid process ID established absent is considered for ordinary restic unlock. Live, foreign, unknown, or uninspectable owners are retained. The implementation never uses a blanket <code>unlock --remove-all</code> in this recovery path. Hostname/PID checks are practical coordination, not a distributed proof against every process-identity race.</p>
+<h3 id="example-schedule-definitions">Example schedule definitions</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>Schedule or lifecycle</th>
+<th>Work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ipad-storage.service</code></td>
+<td>Persistent supervisor; restart policy</td>
+<td>Maintain project iPad mount</td>
+</tr>
+<tr>
+<td><code>project-vault-dashboard.service</code></td>
+<td>Persistent local service</td>
+<td>Serve dashboard</td>
+</tr>
+<tr>
+<td><code>project-vault-backup.timer</code></td>
+<td>Hourly, persistent</td>
+<td>Versioned per-scope backups</td>
+</tr>
+<tr>
+<td><code>project-vault-tier.timer</code></td>
+<td>Boot delay <code>2min</code>; inactive interval <code>10min</code></td>
+<td>Drain reviewed offload queue</td>
+</tr>
+<tr>
+<td><code>project-vault-requests.timer</code></td>
+<td>Boot delay <code>1min</code>; inactive interval <code>1min</code></td>
+<td>Process queued retrievals</td>
+</tr>
+<tr>
+<td><code>project-vault-scrub.timer</code></td>
+<td>Sunday <code>04:00</code>, persistent</td>
+<td>Full repository data check</td>
+</tr>
+<tr>
+<td><code>project-vault-drill.timer</code></td>
+<td>Monthly on day <code>1</code>, <code>05:00</code>, persistent</td>
+<td>Whole Anubis recovery drill</td>
+</tr>
+<tr>
+<td><code>project-vault-verify-now.service</code></td>
+<td>Explicitly started helper</td>
+<td>Scrub followed by drill</td>
+</tr>
+</tbody>
+</table></div>
+<p>Calendar schedules use the deployment’s systemd calendar context. Timer definitions express scheduling intent. Check enablement, service state, journals, and receipt times to determine whether a particular run occurred. Several workers use low CPU/I/O priority and restrictive umasks. Those settings reduce contention; they do not eliminate the cost of hashing and recovery writes.</p>
+<h2 id="dashboard-and-local-security-model">Dashboard and local security model</h2>
+<p>The Project Vault dashboard is served at <code>http://127.0.0.1:8767</code>. Its read model summarizes local capacity, connectivity, project health, operation phases, cold items, pins, queue states, and retrieval jobs. It reads existing records rather than recursively walking the archive merely to render the page.</p>
+<p>State-changing requests require an allowed Host value, a matching local Origin, and a per-process action token. Request size is bounded at <code>8192</code> bytes. Actions are a fixed set, and subprocess invocation uses argument arrays rather than arbitrary shell text. Response headers discourage caching and framing; rendered text is escaped.</p>
+<p>The dashboard is a local control surface. It is not deployed as an authenticated public web service, and its local token is not a security boundary against another process running as the same user. Do not expose the port to a network without a separate security design. A connected badge establishes the presence of the expected mount type, which is weaker than a successful marker check and much weaker than a verified archive restore.</p>
+<p>Operation phases and process I/O counters help distinguish backup, catalog, restore, and comparison work. They are not reliable completion-time estimates. An old running record whose owner is gone is surfaced as interrupted; the persisted timestamp remains important.</p>
+<h2 id="verification-hierarchy">Verification hierarchy</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Observation</th>
+<th>What it establishes</th>
+<th>What it does not establish</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cable connected / Finder sees iPad</td>
+<td>Physical recognition and device discovery in that context</td>
+<td>Working Linux repository</td>
+</tr>
+<tr>
+<td>Mount present</td>
+<td>Filesystem mounted at expected path/type</td>
+<td>Correct marker, healthy archive, durable latest writes</td>
+</tr>
+<tr>
+<td>Vault identity accepted</td>
+<td>Configured destination marker matches</td>
+<td>Protection against malicious same-user replacement</td>
+</tr>
+<tr>
+<td>Snapshot saved</td>
+<td>Backup produced a snapshot for the operation</td>
+<td>All scopes complete or all files readable in partial cases</td>
+</tr>
+<tr>
+<td>Metadata check passed</td>
+<td>Repository structural checks passed at that time</td>
+<td>Every data byte read</td>
+</tr>
+<tr>
+<td><code>check --read-data</code> passed</td>
+<td>Repository data read/check succeeded at that time</td>
+<td>Application recovery or protection of later writes</td>
+</tr>
+<tr>
+<td>Sample file restored</td>
+<td>That selected recovery path worked</td>
+<td>Recovery of unrelated output directories</td>
+</tr>
+<tr>
+<td>Cold candidate full comparison</td>
+<td>Entire candidate matched its recorded inventory schema</td>
+<td>Whole-machine or application-consistent recovery</td>
+</tr>
+<tr>
+<td>Whole-scope drill passed</td>
+<td>Entire selected snapshot recovered under drill procedure</td>
+<td>Independent copy, bootability, or native database consistency</td>
+</tr>
+</tbody>
+</table></div>
+<p>Restic distinguishes structural checking from full data reading with <code>check --read-data</code>. That distinction is why the scrub receipt names its method. <a href="https://restic.readthedocs.io/en/stable/045_working_with_repos.html">restic checking documentation</a></p>
+<p>The current drill restores the files present in its selected scope snapshot. Directories removed by earlier offloads can be absent from that later snapshot while remaining recoverable through separate cold-item snapshots. The drill does not automatically enumerate and retrieve every historical cold item. A successful future run would therefore establish recovery of that selected snapshot, not reconstruction of every previously archived campaign.</p>
+<p>The whole-scope drill deliberately refuses to replace a full recovery with a token sample when space is insufficient. This is a valuable failure mode: it leaves the broad recovery claim unproven rather than issuing a misleading success.</p>
+<h2 id="capacity-management-and-performance-economics">Capacity management and performance economics</h2>
+<p>Archive capacity and Linux working capacity serve different purposes. The iPad can hold retained history while Linux supplies active builds and recovery scratch. Available iPad space does not remove the need for local restoration space. A full candidate must fit locally long enough to prove recovery before its source is retired.</p>
+<p>Large candidates should be reviewed at meaningful subdirectory boundaries. Incremental caches can be suitable when separately reproducible, inactive, and covered by the existing Cargo guard. Arbitrary splitting of a dependency group may make recovery harder; preserve its source, toolchain, and evidence relationships in the handoff.</p>
+<p>Space can decline after successful offloading because builds regenerate caches, new toolchains are installed, logs and caches grow, source scope expands, and verification temporarily duplicates candidate bytes. The local restic cache and catalog also consume space. A lingering verification directory should be investigated through its owning job and process state; its name alone does not authorize deletion.</p>
+<p>The policy avoids automatic snapshot pruning. Consequently, historical versions and uniquely tagged cold snapshots can accumulate even when Linux is well managed. Restic deduplication helps when content repeats, but it does not create unlimited capacity. Compression and deduplication ratios are workload-dependent, and this paper assigns no guaranteed ratio.</p>
+<p>A future retention policy must protect every snapshot referenced by a cold-item receipt. An offloaded item may depend on that snapshot as its only surviving copy. A generic age-based expiration policy can therefore destroy retrievability even while the local catalog continues to list the item. Plan retention from reachability by recovery records, then review the proposed changes and verify recoverability before deletion.</p>
+<h2 id="failure-model-and-response">Failure model and response</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Expected behavior or risk</th>
+<th>Operator response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iPad disconnected or locked</td>
+<td>Repository access fails or waits</td>
+<td>Reconnect, unlock, keep Mac awake; allow supervisor recovery</td>
+</tr>
+<tr>
+<td>Mount directory exists without real mount</td>
+<td>Destination checks should refuse</td>
+<td>Verify actual mount type and marker; never copy into fallback directory</td>
+</tr>
+<tr>
+<td>Wrong vault identity</td>
+<td>Operation refuses</td>
+<td>Resolve destination mismatch; do not rewrite marker to force acceptance</td>
+</tr>
+<tr>
+<td>Source changes during comparison</td>
+<td>Candidate offload refuses</td>
+<td>Coordinate quiet ownership; create a new verified attempt</td>
+</tr>
+<tr>
+<td>Candidate actively used</td>
+<td>Inspection or Cargo guard refuses</td>
+<td>Leave local; retry after owning job finishes</td>
+</tr>
+<tr>
+<td>Pin overlaps candidate</td>
+<td>Offload refuses</td>
+<td>Review ownership; do not bypass pin</td>
+</tr>
+<tr>
+<td>Insufficient local recovery space</td>
+<td>Admission or drill waits/refuses</td>
+<td>Choose smaller eligible candidate or provide recovery capacity</td>
+</tr>
+<tr>
+<td>Repository lock contention</td>
+<td>Defer; conservative stale-lock review</td>
+<td>Inspect owner; never indiscriminately force unlock</td>
+</tr>
+<tr>
+<td>Crash during verification</td>
+<td>Job/scratch may remain</td>
+<td>Inspect records; resume only with matching candidate state</td>
+</tr>
+<tr>
+<td>Crash during removal</td>
+<td>Partial quarantine possible</td>
+<td>Restore verified snapshot elsewhere before cleanup</td>
+</tr>
+<tr>
+<td>Local catalog lost</td>
+<td>Offline discovery impaired</td>
+<td>Recover receipt copies and rebuild catalog from repository</td>
+</tr>
+<tr>
+<td>iPad lost, reset, or Documents deleted</td>
+<td>Sole offloaded archives can be lost</td>
+<td>Independent archive required to survive this event</td>
+</tr>
+<tr>
+<td>Credential lost everywhere</td>
+<td>Encrypted repository may be unrecoverable</td>
+<td>Recover from separately retained credential if available</td>
+</tr>
+<tr>
+<td>All iPad files accessed by another party</td>
+<td>Adjacent recovery credential enables decryption</td>
+<td>Treat complete app-folder access as sensitive</td>
+</tr>
+<tr>
+<td>Live database copied without coordination</td>
+<td>Files may not constitute consistent application state</td>
+<td>Use native application backup/continuity procedure</td>
+</tr>
+</tbody>
+</table></div>
+<p>No automatic checksum can recover bytes when the sole physical device containing them is destroyed. Integrity verification and redundancy address different risks. DUAT prioritizes retaining unique active material locally and offloading reproducible inactive outputs first.</p>
+<h2 id="recovery-procedures">Recovery procedures</h2>
+<h3 id="routine-inspection">Routine inspection</h3>
+<pre><code class="language-bash">project-vault status
+project-vault items
+project-vault list
+python3 /home/USER/.codex/skills/project-vault/scripts/storage_status.py
+systemctl --user status project-vault-backup.service
+journalctl --user -u project-vault-backup.service -n 80 --no-pager
+</code></pre>
+<p>Run user-service commands in the appropriate user session with its actual runtime directory and session bus. Check receipt timestamps and individual project states. Avoid running another repository operation while one is active.</p>
+<h3 id="find-and-recover-an-archived-item">Find and recover an archived item</h3>
+<pre><code class="language-bash">project-vault find example-output
+project-vault items
+
+# Replace ITEM_ID with a result from your own vault; use a new destination.
+project-vault get ITEM_ID \
+  --to /home/USER/Work/recovered-output
+</code></pre>
+<p>If that recovery directory already exists, choose another new destination after inspecting it; do not erase it just to make the command pass. Retrieval verifies the archive against the item’s manifest. Record where recovered content was published so later agents can locate it.</p>
+<h3 id="recover-a-selected-path-from-a-versioned-snapshot">Recover a selected path from a versioned snapshot</h3>
+<pre><code class="language-bash">project-vault find '*Cargo.toml*' --online
+project-vault restore SNAPSHOT_ID /absolute/original/path \
+  --to /home/USER/Work/recovery-inspection
+</code></pre>
+<p><code>SNAPSHOT_ID</code> and the path are placeholders to replace with a matching actual result. The recovered original hierarchy appears below <code>recovery-inspection</code>. Use explicit scope-matching IDs; do not assume the repository’s latest snapshot belongs to Anubis.</p>
+<h3 id="archive-a-completed-reproducible-output">Archive a completed reproducible output</h3>
+<pre><code class="language-bash"># Example paths: substitute a real reviewed, inactive candidate and its owner.
+project-vault provenance /home/USER/.cache/example-output \
+  --repository /home/USER/Projects/example \
+  --rebuild 'the actual retained regeneration command' \
+  --toolchain 'the observed compiler and toolchain identity'
+
+project-vault put /home/USER/.cache/example-output --offload
+</code></pre>
+<p>The example is a template, not evidence that <code>example-output</code> is disposable. The direct CLI still requires an operator or agent to classify the directory correctly. Use <code>project-vault queue PATH</code> for reviewed background processing. Record the returned item ID and snapshot in the campaign handoff.</p>
+<h3 id="protect-an-active-lane">Protect an active lane</h3>
+<pre><code class="language-bash">project-vault pin /home/USER/Work/current-campaign
+# Only after its owner confirms completion:
+project-vault unpin /home/USER/Work/current-campaign
+</code></pre>
+<p>Do not unpin the active round2 lane merely to create room. A parent cannot be retired on the strength of a receipt for one child. A regrown cache requires a new full verification attempt.</p>
+<h3 id="check-repository-data">Check repository data</h3>
+<pre><code class="language-bash">project-vault check
+project-vault check --full
+</code></pre>
+<p>The first command checks metadata; the second reads repository data as well. Both require connectivity and serialized repository access. They can take substantial time. A passing full check does not substitute for an application recovery test. Scheduled scrub and drill receipts are separate from arbitrary manual checks and should be interpreted by their actual method and timestamp.</p>
+<h3 id="recover-after-an-interrupted-offload">Recover after an interrupted offload</h3>
+<p>Inspect the item receipt, cold job state, operation record, and quarantine path. Establish whether deletion began. Do not delete a remaining quarantine or manually change a state to <code>offloaded</code>. Find the exact snapshot and restore it to a new directory with the recorded cold-item retrieval procedure. Validate the recovered content before deciding what remnants can be removed. Preserve logs when verification fails.</p>
+<p>If the local item record is absent but an iPad Recovery copy exists, recover that metadata before using the wrapper. Treat metadata reconstruction as a controlled repair, with the original records preserved. The current product does not expose a universal one-command reconciliation wizard for every crash boundary.</p>
+<h3 id="recover-after-linux-loss">Recover after Linux loss</h3>
+<p>The intended recovery assets are the intact iPad repository, its recovery password, configuration, source maps, item receipts, and the versioned kit selected by <code>Recovery/latest-kit.json</code>. Consult <code>Tools/RECOVERY-BOOTSTRAP.md</code> in that kit for the staged recovery procedure. This scenario is an operational recovery plan, not a production drill that has already passed.</p>
+<p>Before using a copied kit, run <code>python3 /path/to/kit/Tools/verify_kit.py /path/to/kit</code> with a trusted Python installation and inspect the result. This checks its contents against the bundled manifest; it does not independently authenticate the checker or manifest.</p>
+<p>On a replacement Linux environment, first establish trusted device access and mount the same Documents app storage. Preserve the repository before changing it. Obtain the correct restic credential privately from the retained recovery material; never paste it into a chat, command argument, or log. Inspect snapshots with restic and restore the vault implementation and required source to a new local location. Recover local configuration and item records from their iPad copies, adjusting machine-specific paths only through a reviewed migration.</p>
+<p>The credential must match the existing repository. Do not initialize a new empty repository over the old location to silence a missing-password error. The wrapper intentionally refuses an existing repository when its expected local password is missing.</p>
+<p>After enough local capacity is available, perform structural checking, full data checking, and a complete dependency-group restore. Re-establish compiler pins and application-specific continuity separately. Recovering files does not reinstall every package, restore a bootloader, or prove that a live database is consistent.</p>
+<h3 id="define-a-complete-engineering-recovery-group">Define a complete engineering recovery group</h3>
+<p>For a particular Anubis campaign, create an explicit recovery manifest before claiming it is reproducible. Identify the source scope snapshot and commit, dirty-source preservation if applicable, required compiler pins, historical binaries, proof receipts, tool configuration, and every cold-item ID referenced by that campaign. A later ordinary snapshot can omit already offloaded directories, so its file list alone is not that manifest.</p>
+<p>Recover the selected source snapshot and the required cold items into new local locations. Check the cold manifests through <code>get</code>; then follow the owning project's documented verification procedure for toolchain identity, evidence validity, dependency paths, and any reproducibility claim. Merely running a newly rebuilt compiler is not a substitute for recovering a historically cited binary. Application-native database recovery remains separate.</p>
+<p>Acceptance should name the recovered snapshot and item IDs, the actual verification commands and results, unresolved dependencies, and the new paths. Record whether the test recovered files only, successfully ran the intended tools, or reproduced the specific claim. This group-level acceptance procedure is a recommended operating discipline; the current monthly drill does not automate this complete campaign reconstruction.</p>
+<h3 id="recover-after-ipad-loss">Recover after iPad loss</h3>
+<p>Files still present on Linux remain available. A deliberately offloaded original may exist only in the lost iPad repository. Without an independent archive endpoint, those bytes cannot be recovered from another copy. Regeneration may be possible for reproducible outputs when their source and toolchains survive; that does not recreate unique historical evidence automatically.</p>
+<p>This is the primary resilience gap. The paper documents it explicitly instead of labeling a single-device archive an ultimate disaster-recovery system.</p>
+<h2 id="confidentiality-and-trust">Confidentiality and trust</h2>
+<p>The restic repository is encrypted, and its local password file is protected by restrictive permissions. The system also places a recovery password beside the repository on the iPad for usability after Linux loss. This arrangement improves recoverability from loss of the Linux credential but means that access to the complete iPad recovery folder can provide both ciphertext and the means to decrypt it.</p>
+<p>Do not share the entire Recovery folder publicly. A sanitized architecture paper can name credential locations without exposing values. Private SSH keys, device trust material, and repository passwords belong outside logs and memory notes.</p>
+<p>The mount marker protects against common operator mistakes and accidental local fallback. It is not a cryptographic attestation that no hostile same-user process changed a directory. Queue locks and pins similarly coordinate trusted agents; they do not prevent all malicious local modification. Any privileged scan permission and the ownership of the Python code it invokes should be included in a future security review.</p>
+<h2 id="remaining-work-and-design-priorities">Remaining work and design priorities</h2>
+<h3 id="independent-recovery-copy">Independent recovery copy</h3>
+<p>An independent destination for source, archives, recovery records, and separately protected credentials is needed to survive loss of the sole archive device. Another folder on the same device does not provide that independence.</p>
+<h3 id="complete-dependency-group-recovery">Complete dependency-group recovery</h3>
+<p>A replacement-environment drill should recover the required source and cold items, restore toolchain identity, and execute application or build validation. Whole-scope file restoration alone does not establish application consistency or successful rebuilding.</p>
+<h3 id="freshness-and-alerting">Freshness and alerting</h3>
+<p>Operators need per-scope last success, waiting drill state, stale scrub state, and interrupted-retirement records. Timer enablement does not establish successful execution.</p>
+<h3 id="retention-with-cold-item-protection">Retention with cold-item protection</h3>
+<p>Pruning remains disabled. Any future retention design must preserve every snapshot reachable from cold-item records, review prospective deletion, and establish independent recoverability before removing archive data.</p>
+<h3 id="portable-deployment">Portable deployment</h3>
+<p>Scheduler and drill modules retain explicit Anubis integration. The process-inspection helper also needs a suitably protected privileged deployment. Review these assumptions before distributing the system beyond a trusted local environment.</p>
+<h3 id="performance-characterization">Performance characterization</h3>
+<p>Measure actual workloads and scratch-space pressure. Preserve complete recovery and comparison gates while tuning.</p>
+<h2 id="reliability-revision-fixes-and-additions">Reliability revision: fixes and additions</h2>
+<p>The architecture review led to implementation changes, rather than only editorial changes. This revision retains the existing storage policy: active source and pins stay local, offloading remains explicit and verified, and pruning remains disabled.</p>
+<h3 id="cold-archive-reference-audit">Cold archive reference audit</h3>
+<p><code>project-vault audit</code> inspects local cold records, malformed entries, interrupted retirement states, and remaining quarantines. Recreated original paths are reported as informational regrowth with a warning not to reuse an old deletion receipt. <code>project-vault audit --online</code> additionally compares local and iPad item records and checks that every referenced snapshot exists with the expected cold tag and original root. Differences are reported for review; neither side is silently overwritten. Detected issues produce a nonzero CLI exit status.</p>
+<p>The report carries <code>protected_cold_snapshots</code> so maintainers can see the snapshot references that must survive retention planning. It does not enable retention or authorize deletion, and it does not read all archive data. A passing reference audit has a narrower meaning than a scrub or restore.</p>
+<h3 id="versioned-recovery-kits">Versioned recovery kits</h3>
+<p><code>project-vault recovery-export</code> collects the runtime modules, bootstrap guide, configuration, service definitions, cold receipts, provenance, selected health records, and architecture paper into <code>Recovery/Kits/ID</code>. It records per-file SHA256 hashes, reads the completed files back, and publishes <code>Recovery/latest-kit.json</code> only after verification and another destination check. An incomplete new kit does not replace the prior publication pointer. Older kits are retained; identical content can reuse a verified published kit.</p>
+<p>Each kit contains <code>Tools/verify_kit.py</code>, which can check a copied kit with Python’s standard library without importing the vault modules. The manifest and pointer establish consistency, not independent authenticity. Recovery credentials remain at their existing locations rather than being duplicated into each kit. Legacy <code>Recovery/Tools</code> is retained for historical compatibility; the versioned kit pointer is the current recovery-tool entry point.</p>
+<p>The scheduled runner now performs a cold-reference audit and kit export after its scope-processing pass. Busy or offline operations defer and leave a maintenance result. The dashboard shows the audit, kit and maintenance receipt states. A refreshed kit does not establish that every project scope succeeded.</p>
+<h3 id="concurrency-and-reporting-fixes">Concurrency and reporting fixes</h3>
+<p>Record publication uses unique temporary filenames and fsync as described in Verified offloading. Pin updates and final retirement share a lock. The final path-recreation check also treats a broken symlink as an occupied original path. The offload worker no longer says a source was necessarily retained after every possible exception; its notification directs the operator to the receipt and quarantine, accounting for partial deletion failures.</p>
+<p>Scrub attempts now save a waiting or failed state while preserving <code>last_success</code> separately. Repository lock contention is classified as waiting for scrubs and drills. The drill’s success boundary explicitly excludes cold snapshots removed from the selected scope. The stale Recovery README and policy wording have been corrected.</p>
+<h3 id="documentation-coverage-and-recovery-discipline">Documentation coverage and recovery discipline</h3>
+<p>Configure the paper as an additional backup path when desired. Recovery-kit export includes matching architecture papers from Documents without covering every file in that folder. The bootstrap guide gives staged direct-restic and wrapper recovery commands, preserves conflicting metadata for review, and prohibits automatically restarting historical deletion queues on a replacement machine.</p>
+<p>Automated checks cover concurrent JSON publication, failed-publication preservation, concurrent pins, pin/retirement serialization, scrub deferral semantics, kit corruption and failed-publication behavior, and missing or inconsistent cold references. Fixture tests do not establish replacement-machine recovery.</p>
+<h2 id="creating-recovery-space-through-verified-offload">Creating recovery space through verified offload</h2>
+<p>Reviewed inactive build objects can be candidates for verified offload when their retained source, toolchain, and evidence remain protected.</p>
+<h3 id="preserving-local-executables-while-archiving-dependency-objects">Preserving local executables while archiving dependency objects</h3>
+<p>The new <code>put --offload --retain-binaries</code> option applies only to a flat regular-file Cargo <code>debug/deps</code> or <code>release/deps</code> directory. The existing Cargo profile lock protects the operation. It creates and verifies local hard links for every entry except non-executable <code>.rlib</code>, <code>.rmeta</code>, and <code>.o</code> objects. The retained directory, <code>vault-retained-binaries-ITEM_ID</code>, is pinned and recorded in the cold-item receipt. Executables, shared libraries, dependency records, and other regular files retain their local bytes and metadata. Their retained location is explicit; the original deps layout remains recoverable with <code>get</code>.</p>
+<p>The whole original dependency directory still passes the existing snapshot, full restore, hash/metadata comparison, receipt-readback and quarantine gates before retirement. This feature changes which physical bytes remain locally referenced; it does not weaken archive verification or make an active directory eligible. Non-flat contents require review.</p>
+<h3 id="generated-native-run-caches">Generated native-run caches</h3>
+<p>The cold-storage integration recognizes a shared target named <code>anubis-run-cargo-target-audited-crypto-v3</code>. Before treating that target as eligible, confirm that the compiler has copied required outputs elsewhere and that the target contains no unique evidence.</p>
+<p>For this recognized target's <code>release</code> directory, the vault now acquires Anubis's existing <code>.anubis-build-mutex</code> in the parent target directory. It writes its own live owner PID, refuses any existing mutex, and removes only its own unchanged ownership record and empty mutex on exit. Participating Anubis runners wait while the cache is archived and compared. This is cooperative coordination, not protection against arbitrary unrelated writers.</p>
+<h3 id="recovery-claim-after-reclamation">Recovery claim after reclamation</h3>
+<p>A recovery campaign can save a fresh working-scope snapshot after reviewed offloads and attempt to restore the entire snapshot with verification into local scratch. All selected cold directories separately undergo complete recovery comparison before their local copies are removed. A successful working-scope drill must not be described as simultaneous recovery of every historical cold snapshot.</p>
+<p>Read each operation receipt before claiming completion. A running state is not a completion receipt.</p>
+<h2 id="appendix-implementation-map">Appendix: implementation map</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>File in <code>~/Projects/duat/</code></th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vault.py</code></td>
+<td>Configuration, destination checks, source discovery, restic wrapper, catalog, CLI</td>
+</tr>
+<tr>
+<td><code>cold.py</code></td>
+<td>Candidate inventory, activity checks, guarded offload, cold retrieval</td>
+</tr>
+<tr>
+<td><code>pins.py</code></td>
+<td>Concurrent pin edits and final-retirement coordination</td>
+</tr>
+<tr>
+<td><code>recovery.py</code>, <code>verify_kit.py</code></td>
+<td>Cold-reference audits and versioned recovery-kit publication/verification</td>
+</tr>
+<tr>
+<td><code>RECOVERY-BOOTSTRAP.md</code></td>
+<td>Replacement-Linux recovery procedure and acceptance boundaries</td>
+</tr>
+<tr>
+<td><code>provenance.py</code></td>
+<td>Source/toolchain/regeneration records</td>
+</tr>
+<tr>
+<td><code>queue_store.py</code></td>
+<td>Persistent enrollment and short queue-edit locking</td>
+</tr>
+<tr>
+<td><code>tier_queue.py</code></td>
+<td>Background reviewed offload processing</td>
+</tr>
+<tr>
+<td><code>requests_worker.py</code></td>
+<td>Persistent retrieval processing</td>
+</tr>
+<tr>
+<td><code>scheduled.py</code></td>
+<td>Independent project-scope orchestration</td>
+</tr>
+<tr>
+<td><code>anubis_backup.py</code></td>
+<td>Extended Anubis scope and initial recovery checks</td>
+</tr>
+<tr>
+<td><code>lock_recovery.py</code></td>
+<td>Conservative same-host stale-lock handling</td>
+</tr>
+<tr>
+<td><code>health.py</code></td>
+<td>Read-only dashboard state assembly</td>
+</tr>
+<tr>
+<td><code>render_whitepaper.py</code></td>
+<td>Regenerate the standalone paper from its Markdown source</td>
+</tr>
+<tr>
+<td><code>dashboard.py</code>, <code>dashboard.html</code></td>
+<td>Local HTTP control and interface</td>
+</tr>
+<tr>
+<td><code>scrub.py</code></td>
+<td>Full repository data-check receipt</td>
+</tr>
+<tr>
+<td><code>drill.py</code></td>
+<td>Whole-scope restore admission and execution</td>
+</tr>
+<tr>
+<td><code>compact_catalog.py</code></td>
+<td>Catalog maintenance</td>
+</tr>
+<tr>
+<td><code>ANUBIS-COVERAGE.md</code></td>
+<td>Coverage explanation</td>
+</tr>
+<tr>
+<td><code>test_vault.py</code>, <code>test_cold.py</code>, <code>test_maintenance.py</code>, <code>test_queue.py</code>, <code>test_polish.py</code></td>
+<td>Targeted implementation tests</td>
+</tr>
+</tbody>
+</table></div>
+<p>The repository contains the reusable implementation; historical device-maintenance and reclamation scripts are not part of this distribution.</p>
+<h2 id="appendix-evidence-locations-and-interpretation">Appendix: evidence locations and interpretation</h2>
+<p>All local state paths below are relative to <code>~/.local/state/project-vault/</code>.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project-health.json</code></td>
+<td>Per-scope state, snapshot, timestamp, retained prior success where available</td>
+</tr>
+<tr>
+<td><code>scrub.json</code></td>
+<td>Latest attempt method/state/time and separate last successful time after the revision</td>
+</tr>
+<tr>
+<td><code>recovery-audit.json</code></td>
+<td>Local or online cold-reference audit, issues, and protected snapshot IDs</td>
+</tr>
+<tr>
+<td><code>recovery-kit.json</code>, <code>recovery-maintenance.json</code></td>
+<td>Published kit readback and scheduled recovery-maintenance status</td>
+</tr>
+<tr>
+<td><code>restore-drill.json</code></td>
+<td>Whole-scope drill state and capacity refusal or result</td>
+</tr>
+<tr>
+<td><code>anubis-recovery-check.json</code></td>
+<td>Initial recovery check history; not repeated full verification of every later snapshot</td>
+</tr>
+<tr>
+<td><code>items/*.json</code></td>
+<td>Original path, cold ID, snapshot, manifest digest, verification and state</td>
+</tr>
+<tr>
+<td><code>cold-jobs/</code></td>
+<td>Candidate job manifests and resumable verification state</td>
+</tr>
+<tr>
+<td><code>offloads.jsonl</code></td>
+<td>Append-only operation history written by the wrapper</td>
+</tr>
+<tr>
+<td><code>source-maps/</code></td>
+<td>Snapshot-specific source mapping</td>
+</tr>
+<tr>
+<td><code>catalog-scopes.json</code></td>
+<td>Compact catalog scope information</td>
+</tr>
+<tr>
+<td><code>offload-queue.json</code></td>
+<td>Explicit enrolled candidates and processing states</td>
+</tr>
+<tr>
+<td><code>pinned-paths.json</code></td>
+<td>Current working-set protection</td>
+</tr>
+<tr>
+<td><code>operation.json</code>, <code>cold-operation.json</code></td>
+<td>Last recorded active phase or terminal state</td>
+</tr>
+</tbody>
+</table></div>
+<p>Corresponding recovery copies exist for important records under <code>~/iPad/TryOmarchy/Recovery</code>. Local and remote copies can differ if interrupted while updating; compare their identities and state transitions during recovery. A copied receipt is still a record of an operation, not a newly performed verification.</p>
+<p>The source tests cover backup/restore, tampering, destination checks, worktrees, catalogs, scope grouping, candidate round trips, changed-source and pin refusals, interrupted restore, locking, queue edits, and drill admission. Run them in an isolated environment. Fixture success does not establish production disaster recovery.</p>
+<h2 id="appendix-command-reference">Appendix: command reference</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project-vault audit [--online]</code></td>
+<td>Audit local receipts; optionally compare iPad records and snapshot references; failing exit status for identified issues</td>
+</tr>
+<tr>
+<td><code>project-vault recovery-export</code></td>
+<td>Publish a versioned recovery kit after complete file-hash readback</td>
+</tr>
+<tr>
+<td><code>project-vault status</code></td>
+<td>Local summary and recorded items/queue</td>
+</tr>
+<tr>
+<td><code>project-vault sources</code></td>
+<td>Resolve configured source mapping</td>
+</tr>
+<tr>
+<td><code>project-vault backup</code></td>
+<td>Run ordinary configured backup</td>
+</tr>
+<tr>
+<td><code>project-vault list</code></td>
+<td>List cataloged snapshots</td>
+</tr>
+<tr>
+<td><code>project-vault catalog</code></td>
+<td>Refresh catalog while online</td>
+</tr>
+<tr>
+<td><code>project-vault find QUERY</code></td>
+<td>Search compact local index and cold records</td>
+</tr>
+<tr>
+<td><code>project-vault find PATTERN --online</code></td>
+<td>Search complete repository filename metadata</td>
+</tr>
+<tr>
+<td><code>project-vault put PATH</code></td>
+<td>Archive and compare entire candidate; keep source</td>
+</tr>
+<tr>
+<td><code>project-vault put PATH --offload</code></td>
+<td>Same verification, then guarded retirement</td>
+</tr>
+<tr>
+<td><code>project-vault put PROFILE/deps --offload --retain-binaries</code></td>
+<td>Preserve non-object files locally, then fully verify and retire reviewed Cargo deps</td>
+</tr>
+<tr>
+<td><code>project-vault items</code></td>
+<td>List cold-item records offline</td>
+</tr>
+<tr>
+<td><code>project-vault get ID_OR_PATH</code></td>
+<td>Recover cold item to its original path if absent</td>
+</tr>
+<tr>
+<td><code>project-vault get ID_OR_PATH --to NEW_PATH</code></td>
+<td>Recover cold item elsewhere</td>
+</tr>
+<tr>
+<td><code>project-vault provenance PATH --repository REPO --rebuild COMMAND --toolchain IDENTITY</code></td>
+<td>Record regeneration context</td>
+</tr>
+<tr>
+<td><code>project-vault queue PATH</code></td>
+<td>Enroll an exact reviewed directory</td>
+</tr>
+<tr>
+<td><code>project-vault pin PATH</code></td>
+<td>Protect overlapping working-set paths</td>
+</tr>
+<tr>
+<td><code>project-vault unpin PATH</code></td>
+<td>Release protection after ownership review</td>
+</tr>
+<tr>
+<td><code>project-vault check</code></td>
+<td>Repository metadata check</td>
+</tr>
+<tr>
+<td><code>project-vault check --full</code></td>
+<td>Full repository data reading/checking</td>
+</tr>
+<tr>
+<td><code>project-vault restore SNAPSHOT PATH --to NEW_DIRECTORY</code></td>
+<td>Selected-path snapshot recovery</td>
+</tr>
+<tr>
+<td><code>project-vault plan</code></td>
+<td>Advisory candidate discovery; no automatic deletion</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>init</code> is an initialization command, not a remedy for an unreadable existing archive. It creates recovery material under guarded conditions and must not be used to replace a repository whose credential or mount is missing.</p>
+<h2 id="glossary">Glossary</h2>
+<p><strong>Archive:</strong> retained content that may no longer have a Linux original.<br />
+<strong>Backup:</strong> a recoverable additional version while its working original may remain.<br />
+<strong>Cold item:</strong> an exact directory associated with a dedicated snapshot and manifest receipt.<br />
+<strong>FUSE:</strong> the Linux mechanism through which ifuse exposes application files as a mounted filesystem.<br />
+<strong>Manifest:</strong> the complete candidate inventory under the implementation’s defined metadata schema.<br />
+<strong>Offload:</strong> archive, recover, compare, and then retire the eligible local directory.<br />
+<strong>Pin:</strong> a local policy record that refuses overlapping retirement.<br />
+<strong>Provenance:</strong> source and toolchain context; its strength depends on what was actually recorded.<br />
+<strong>Quarantine:</strong> a same-filesystem renamed source used during guarded retirement.<br />
+<strong>Scope:</strong> a named group of backup source paths with its own health record.<br />
+<strong>Scrub:</strong> full repository data reading and checking.<br />
+<strong>Snapshot:</strong> a restic identity for a retained filesystem view.<br />
+<strong>Working set:</strong> the files needed locally for current engineering work.</p>
+<h2 id="references-and-maintenance-of-this-paper">References and maintenance of this paper</h2>
+<p>Implementation references are the repository modules, example configuration and units, and packaged agent skill. Upstream documentation:</p>
+<ul>
+<li><a href="https://restic.readthedocs.io/en/stable/045_working_with_repos.html">restic: working with repositories and checking integrity</a>.</li>
+<li><a href="https://restic.readthedocs.io/en/stable/050_restore.html">restic: restoring from backup</a>.</li>
+<li><a href="https://restic.readthedocs.io/en/stable/100_references.html">restic: command and data references</a>.</li>
+<li><a href="https://github.com/libimobiledevice/ifuse">libimobiledevice: ifuse application file sharing</a>.</li>
+</ul>
+<p>Update this paper when source coverage, transport, verification gates, recovery credentials, retention policy, or service behavior changes. Preserve older editions when they help explain historical receipts. Recheck operational measurements instead of carrying old free-space figures forward as current facts.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>DUAT Vault connects a Linux working set with an explicitly recoverable archive. Its central operation is the guarded transition from a saved snapshot to a complete recovered-and-compared candidate whose eligible local original can be retired.</p>
+<p>Its assurance is specific to the checked candidate, method, and operation. Cooperative concurrency, local recovery capacity, archive-device survival, and credential availability remain explicit boundaries. Use actual receipts and recovery exercises to establish the state of an installation.</p></main></div><footer class="footer">DUAT Vault · Standalone reading edition · No external scripts, fonts, or assets required.<br>Editable companion: DUAT-Vault-Architecture-White-Paper.md</footer></body></html>

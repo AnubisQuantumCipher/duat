@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry and update iPad project backups hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=project-vault-backup.service
+
+[Install]
+WantedBy=timers.target

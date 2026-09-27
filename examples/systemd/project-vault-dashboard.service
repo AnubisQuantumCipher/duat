@@ -1,0 +1,14 @@
+[Unit]
+Description=Project Vault dashboard
+After=ipad-storage.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/Projects/duat/dashboard.py
+UMask=0077
+Nice=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

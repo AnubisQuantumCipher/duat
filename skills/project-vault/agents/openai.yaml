@@ -1,0 +1,6 @@
+interface:
+  display_name: "DUAT Project Vault"
+  short_description: "Manage Anubis build storage with verified iPad offload"
+  default_prompt: "Use $project-vault to check space for my Anubis work, protect active artifacts, and offload eligible completed outputs to the iPad with full recovery verification."
+policy:
+  allow_implicit_invocation: true
