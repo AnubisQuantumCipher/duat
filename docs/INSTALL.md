@@ -105,3 +105,11 @@ The HTML paper is already standalone. To regenerate it, install Python `Markdown
 in a virtual environment and run `python3 render_whitepaper.py` from this checkout.
 The renderer reads `docs/DUAT-Vault-Architecture-White-Paper.md` and writes its
 HTML companion. Review the generated output before committing.
+
+## Bench deployment
+
+Deploy `bench.py` and `bench.html` beside `dashboard.py`, and use the matching updated
+`vault.py` and `recovery.py`. Restart the dashboard service to load the new routes.
+No new daemon or timer is required; an explicit start launches a benchmark worker.
+The worker shares the existing vault lock and retains its synthetic artifacts.
+See [DUAT Bench](BENCH.md) before starting a run.

@@ -18,6 +18,7 @@
 <li><a href="#catalog-provenance-and-agent-memory">Catalog, provenance, and agent memory</a></li>
 <li><a href="#concurrency-scheduling-and-recovery-coordination">Concurrency, scheduling, and recovery coordination</a></li>
 <li><a href="#dashboard-and-local-security-model">Dashboard and local security model</a></li>
+<li><a href="#duat-bench-and-live-metrics">DUAT Bench and Live Metrics</a></li>
 <li><a href="#verification-hierarchy">Verification hierarchy</a></li>
 <li><a href="#capacity-management-and-performance-economics">Capacity management and performance economics</a></li>
 <li><a href="#failure-model-and-response">Failure model and response</a></li>
@@ -406,6 +407,35 @@ remove exact quarantine -&gt; record completion and reclamation
 <p>State-changing requests require an allowed Host value, a matching local Origin, and a per-process action token. Request size is bounded at <code>8192</code> bytes. Actions are a fixed set, and subprocess invocation uses argument arrays rather than arbitrary shell text. Response headers discourage caching and framing; rendered text is escaped.</p>
 <p>The dashboard is a local control surface. It is not deployed as an authenticated public web service, and its local token is not a security boundary against another process running as the same user. Do not expose the port to a network without a separate security design. A connected badge establishes the presence of the expected mount type, which is weaker than a successful marker check and much weaker than a verified archive restore.</p>
 <p>Operation phases and process I/O counters help distinguish backup, catalog, restore, and comparison work. They are not reliable completion-time estimates. An old running record whose owner is gone is surfaced as interrupted; the persisted timestamp remains important.</p>
+<h2 id="duat-bench-and-live-metrics">DUAT Bench and Live Metrics</h2>
+<p>DUAT Bench is an explicit synthetic workload runner accessed through <code>project-vault bench</code>
+or the dashboard's <strong>Bench &amp; live metrics</strong> page. Each run owns a generated local
+source, a dedicated archive directory, a fresh encrypted test repository, separate
+credentials and cache, and a new restore destination. It uses the existing vault lock
+and refuses offline, busy, or insufficient-capacity conditions. Benchmarks never retire
+production sources or prune production snapshots; synthetic artifacts are retained too.</p>
+<p>The phase timeline separates source generation, filesystem payload write, host sync
+acknowledgement, payload readback comparison, isolated repository initialization,
+encrypted backup, full encrypted repository data reading, verified restoration, and
+complete manifest comparison of restored files and the retained source. The measured
+round-trip clock begins after generation and ends only when every recovery gate passes.
+An upload alone is never labeled verified recovery.</p>
+<p>Live and sustained rates are labeled by their byte counter. Complete peak windows retain
+actual start/end times; short phases have unavailable peaks. Restic logical progress and
+packed added data are distinct from filesystem payload and physical wire traffic.
+Batched backend live rates are estimated. Device-committed-object throughput and negotiated
+link speed remain unavailable when the backend exposes no authoritative counters.
+No cable label supplies a speed measurement.</p>
+<p>The dashboard distinguishes measured, estimated, unavailable, and historical values.
+It shows free space, retained scratch usage, wrapper retries, unavailable backend-internal
+retries, host load, available memory, and thermal readings where exposed. Cache state is
+uncontrolled and reported. A local fixture result is explicitly identified as a fixture.</p>
+<p>Exports include a standalone shareable HTML result card, complete timestamped raw CSV
+samples, and a JSON report with workload recipe, synthetic manifest, phase measurements,
+software identity, integrity results and sample digest. Public exports omit local paths,
+credentials and production identifiers. Operating measurements remain part of the requested
+report and should be reviewed before sharing. See the repository's <code>docs/BENCH.md</code> for
+reproduction commands, counter definitions, and reserve/cancellation boundaries.</p>
 <h2 id="verification-hierarchy">Verification hierarchy</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -733,6 +763,10 @@ project-vault check --full
 <tr>
 <td><code>dashboard.py</code>, <code>dashboard.html</code></td>
 <td>Local HTTP control and interface</td>
+</tr>
+<tr>
+<td><code>bench.py</code>, <code>bench.html</code></td>
+<td>Isolated synthetic benchmarks, live metrics and exports</td>
 </tr>
 <tr>
 <td><code>scrub.py</code></td>

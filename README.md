@@ -25,6 +25,14 @@ The white papers are sanitized publication editions. Paths and commands use gene
 examples; personal device inventories, production identifiers, storage measurements,
 and account details are omitted. See [privacy review](docs/PRIVACY-REVIEW.md).
 
+## DUAT Bench and Live Metrics
+
+Open **Bench & live metrics** from the local dashboard or run `project-vault bench`.
+Synthetic-only runs separate payload movement, encrypted backup, verified restore,
+and complete round-trip time, with phase rates, labeled peaks, operating telemetry,
+and HTML/CSV/JSON exports. See the [benchmark guide](docs/BENCH.md) for measurement
+boundaries, reserve checks, and reproducible workload settings.
+
 ## Workflow
 
 After configuring and initializing a new vault:

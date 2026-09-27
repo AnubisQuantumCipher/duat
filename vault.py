@@ -404,6 +404,10 @@ def main():
     sub = parser.add_subparsers(dest='action', required=True)
     for action in ('status', 'init', 'backup', 'catalog', 'list', 'plan', 'sources', 'items', 'recovery-export'):
         sub.add_parser(action)
+    bench_parser = sub.add_parser('bench', help='Run an isolated synthetic benchmark')
+    bench_parser.add_argument('--size-mib', type=int, default=16)
+    bench_parser.add_argument('--files', type=int, default=8)
+    bench_parser.add_argument('--pattern', choices=['incompressible','compressible'], default='incompressible')
     audit = sub.add_parser('audit'); audit.add_argument('--online', action='store_true')
     find = sub.add_parser('find'); find.add_argument('query'); find.add_argument('--online', action='store_true')
     put = sub.add_parser('put'); put.add_argument('path'); put.add_argument('--offload', action='store_true'); put.add_argument('--retain-binaries', action='store_true')
@@ -420,6 +424,14 @@ def main():
     vault = Vault(args.config)
     result = None
     if args.action == 'status': result = vault.status()
+    elif args.action == 'bench':
+        from bench import reserve_request, validate_options, worker
+        options = validate_options(args.size_mib, args.files, args.pattern)
+        identity = reserve_request(args.config, options)
+        result = worker(args.config, identity)
+        print(json.dumps({'id':identity,'state':result['state'],'error':result.get('error')},indent=2))
+        vault.db.close()
+        raise SystemExit(0 if result['state']=='passed' else 1)
     elif args.action == 'init': vault.initialize()
     elif args.action == 'backup': vault.backup()
     elif args.action == 'recovery-export':

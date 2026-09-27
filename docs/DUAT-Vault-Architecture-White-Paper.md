@@ -328,6 +328,41 @@ The dashboard is a local control surface. It is not deployed as an authenticated
 
 Operation phases and process I/O counters help distinguish backup, catalog, restore, and comparison work. They are not reliable completion-time estimates. An old running record whose owner is gone is surfaced as interrupted; the persisted timestamp remains important.
 
+## DUAT Bench and Live Metrics
+
+DUAT Bench is an explicit synthetic workload runner accessed through `project-vault bench`
+or the dashboard's **Bench & live metrics** page. Each run owns a generated local
+source, a dedicated archive directory, a fresh encrypted test repository, separate
+credentials and cache, and a new restore destination. It uses the existing vault lock
+and refuses offline, busy, or insufficient-capacity conditions. Benchmarks never retire
+production sources or prune production snapshots; synthetic artifacts are retained too.
+
+The phase timeline separates source generation, filesystem payload write, host sync
+acknowledgement, payload readback comparison, isolated repository initialization,
+encrypted backup, full encrypted repository data reading, verified restoration, and
+complete manifest comparison of restored files and the retained source. The measured
+round-trip clock begins after generation and ends only when every recovery gate passes.
+An upload alone is never labeled verified recovery.
+
+Live and sustained rates are labeled by their byte counter. Complete peak windows retain
+actual start/end times; short phases have unavailable peaks. Restic logical progress and
+packed added data are distinct from filesystem payload and physical wire traffic.
+Batched backend live rates are estimated. Device-committed-object throughput and negotiated
+link speed remain unavailable when the backend exposes no authoritative counters.
+No cable label supplies a speed measurement.
+
+The dashboard distinguishes measured, estimated, unavailable, and historical values.
+It shows free space, retained scratch usage, wrapper retries, unavailable backend-internal
+retries, host load, available memory, and thermal readings where exposed. Cache state is
+uncontrolled and reported. A local fixture result is explicitly identified as a fixture.
+
+Exports include a standalone shareable HTML result card, complete timestamped raw CSV
+samples, and a JSON report with workload recipe, synthetic manifest, phase measurements,
+software identity, integrity results and sample digest. Public exports omit local paths,
+credentials and production identifiers. Operating measurements remain part of the requested
+report and should be reviewed before sharing. See the repository's `docs/BENCH.md` for
+reproduction commands, counter definitions, and reserve/cancellation boundaries.
+
 ## Verification hierarchy
 
 | Observation | What it establishes | What it does not establish |
@@ -590,6 +625,7 @@ Read each operation receipt before claiming completion. A running state is not a
 | `health.py` | Read-only dashboard state assembly |
 | `render_whitepaper.py` | Regenerate the standalone paper from its Markdown source |
 | `dashboard.py`, `dashboard.html` | Local HTTP control and interface |
+| `bench.py`, `bench.html` | Isolated synthetic benchmarks, live metrics and exports |
 | `scrub.py` | Full repository data-check receipt |
 | `drill.py` | Whole-scope restore admission and execution |
 | `compact_catalog.py` | Catalog maintenance |

@@ -11,7 +11,7 @@ from verify_kit import verify
 RUNTIME = ('vault.py', 'cold.py', 'pins.py', 'recovery.py', 'verify_kit.py',
            'provenance.py', 'queue_store.py', 'tier_queue.py', 'requests_worker.py',
            'scheduled.py', 'anubis_backup.py', 'lock_recovery.py', 'health.py',
-           'dashboard.py', 'dashboard.html', 'scrub.py', 'drill.py')
+           'dashboard.py', 'dashboard.html', 'scrub.py', 'drill.py', 'bench.py', 'bench.html')
 HEX64 = re.compile(r'^[0-9a-f]{64}$')
 
 def read_items(folder):
@@ -82,6 +82,7 @@ def export_kit(vault):
             files['Tools/' + name] = (source / name).read_bytes()
         for name in ('README.md', 'ANUBIS-COVERAGE.md', 'RECOVERY-BOOTSTRAP.md', 'render_whitepaper.py'):
             files['Tools/' + name] = (source / name).read_bytes()
+        files['Tools/BENCH.md'] = (source / 'docs/BENCH.md').read_bytes()
         for file in sorted((home / '.config/systemd/user').glob('project-vault-*')):
             if file.is_file():
                 files['Services/' + file.name] = file.read_bytes()

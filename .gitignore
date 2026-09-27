@@ -12,3 +12,8 @@ state/
 Repository/
 Recovery/
 *.sqlite*
+
+# Bench runtime artifacts contain operating measurements and private test credentials.
+bench-results/
+Bench/
+bench/runs/

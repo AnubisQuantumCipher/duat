@@ -1,22 +1,22 @@
-# Packaging validation
+# Validation
 
-Validated on the original Linux host on 2026-09-27, from this repository checkout.
+The publication package and DUAT Bench were exercised with local synthetic restic
+repositories. No production snapshots or source folders were retired or pruned.
 
-```text
-python3 -m unittest discover -v
-Ran 30 tests in 75.330s
-OK
-```
+Validation covers complete encrypted round trips, source retention, corruption refusal,
+offline and reserve refusal, reserve loss during a run, production-lock exclusion,
+symlink refusal, cancellation, prevention of overwriting prior runs, exact peak-window
+boundaries, and exports free of test credentials and source paths.
 
-The suite exercises temporary local restic repositories. It does not use production
-archives and does not establish a new production restore or independent disaster recovery.
+The full suite also covers the original vault, queue, recovery-kit, manifest and pin
+behavior. Headless Chromium exercised the benchmark through the HTTP/UI interface,
+including a completed synthetic run, HTML/CSV/JSON exports, origin/token checks,
+invalid export paths, and desktop/mobile layouts without page errors or horizontal
+overflow. The installed dashboard was separately checked over loopback.
 
-Additional checks passed: CLI help, example JSON parsing, Git whitespace checks
-(Markdown hard line breaks are permitted), and runtime comparisons during initial packaging. A later privacy revision replaced the
-white papers with sanitized editions and updated the renderer and documentation.
-See `PRIVACY-REVIEW.md` for the publication review scope.
+These are fixture and UI checks, not measured iPad throughput or production disaster
+recovery. Deployment-specific operating records remain outside this repository.
 
-A scan for common private-key and credential-token patterns found no matches in the
-packaged files. Live configuration, credentials, archive contents, and local state
-were excluded during source selection. This pattern check is not a comprehensive
-security audit.
+The privacy review checks publication files for personal deployment markers and
+credential patterns. Benchmark output, runtime credentials, raw private backend logs,
+and local operation reports are excluded from version control.
