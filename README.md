@@ -9,7 +9,7 @@ activity and pins, and verifies the quarantined source before removal.
 
 This repository contains the implementation developed for Omarchy and Anubis engineering,
 the Project Vault agent skill, and the architecture white paper. It is MIT licensed and
-currently maintained as a private repository in preparation for public release.
+publicly available on GitHub.
 
 ## Read and explore
 
