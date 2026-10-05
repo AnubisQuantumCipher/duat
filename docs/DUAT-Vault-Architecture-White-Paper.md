@@ -160,6 +160,8 @@ Restic supplies encrypted, deduplicated snapshot storage. DUAT supplies source s
 
 The example configuration names `~/Projects` and `~/Work` as project roots; additional paths are operator-selected. Source discovery resolves relevant targets, discovers registered Git worktrees and common Git metadata, removes redundant nested source roots, and records the mapping between intended inputs and stored paths.
 
+Resolved sources outside the configured home require an explicit `allowed_external_roots` entry. The same check applies to discovered worktrees and shared Git metadata. A source under the iPad mount remains forbidden even if an external root is configured. Operators should review each external root and inspect the resulting source map.
+
 This is important for linked worktrees. Saving the visible checkout without its shared Git metadata may leave an incomplete development environment. It is also important for installed launchers that resolve to actual executable locations. Discovery is not a promise to back up every linked payload in every custom application; inspect the source map for the particular snapshot.
 
 An application-specific configuration can cover source, external worktrees, configuration, installed tools, and state. Missing configured paths are skipped. A missing path that was deliberately offloaded is different from an accidentally missing source; its cold receipt is the recovery address.
@@ -182,6 +184,8 @@ Including tags in grouping fixes a concrete issue discovered during operation: i
 
 The scheduled runner processes Anubis as its extended scope, then separate project scopes and Work. Each scope has an independent health entry. An unreadable source can make one scope incomplete while unrelated scopes continue. Busy, disconnected, or repository-lock conditions defer work. Previous successful snapshot references are retained where available.
 
+When a private `work_partial_policy` is configured for Work, the runner may save a separate, declared readable subset. Its policy names excluded roots, a reference source, and allowed linked roots. The manifest records included and omitted paths, checks the saved source map, and states that no scheduled full restore was performed. The older complete Work health record must remain `incomplete`; success for the partial tag cannot upgrade that broader claim. The public repository includes a synthetic policy example, not a deployment path inventory.
+
 A `passed` scope health record says that a snapshot was saved and repository metadata checked. It is not equivalent to reading every stored byte or restoring the entire project. The scheduler may exit without every scope becoming current; inspect scope records and timestamps rather than relying only on service exit state.
 
 ## Verified offloading
@@ -194,7 +198,7 @@ A candidate must be an existing real directory strictly below Projects, Work, or
 
 Activity inspection checks relevant processes’ working directories, executables, file descriptors, and mapped files through a read-only privileged process scan. If the scan cannot safely inspect a relevant live process, the operation refuses. For an exact `debug/incremental` or `release/incremental` candidate, the implementation also acquires the existing Cargo profile lock. A missing or symlinked lock file is not treated as permission to proceed.
 
-CLI pin edits now share `pins.lock` with the final validation, quarantine, and deletion window. A pin accepted before final retirement is observed there; a request arriving after the window begins waits and cannot undo a completed offload. Concurrent pin edits no longer lose each other’s updates. Direct manual JSON edits bypass this protocol. These mechanisms reduce races. They do not make arbitrary concurrent writers safe. Agents must still coordinate ownership and pin active lanes. The privileged scan executes local Python code; the overall design assumes trusted local code and agents, not an adversarial user modifying that code.
+CLI pin edits now share `pins.lock` with the final validation, quarantine, and deletion window. A pin accepted before final retirement is observed there; a request arriving after the window begins waits and cannot undo a completed offload. Concurrent pin edits no longer lose each other’s updates. Direct manual JSON edits bypass this protocol. These mechanisms reduce races. They do not make arbitrary concurrent writers safe. Agents must still coordinate ownership and pin active lanes. The privileged process scan uses a fixed, root-owned helper outside the writable checkout; its installation and sudo permission require administrator review.
 
 Local free space must accommodate the complete verification restore plus the configured/default working reserve. Local and archive reserves come from configuration, with a local fallback in the implementation. The admission estimate uses logical file sizes rather than an optimistic assumption about deduplication savings. A very large directory can therefore be ineligible even when storing its new archive blocks would be cheap.
 
@@ -526,7 +530,7 @@ The restic repository is encrypted, and its local password file is protected by 
 
 Do not share the entire Recovery folder publicly. A sanitized architecture paper can name credential locations without exposing values. Private SSH keys, device trust material, and repository passwords belong outside logs and memory notes.
 
-The mount marker protects against common operator mistakes and accidental local fallback. It is not a cryptographic attestation that no hostile same-user process changed a directory. Queue locks and pins similarly coordinate trusted agents; they do not prevent all malicious local modification. Any privileged scan permission and the ownership of the Python code it invokes should be included in a future security review.
+The mount marker protects against common operator mistakes and accidental local fallback. It is not a cryptographic attestation that no hostile same-user process changed a directory. Queue locks and pins similarly coordinate trusted agents; they do not prevent all malicious local modification. The installed scan helper and its sudo permission remain part of the deployment's security review.
 
 ## Remaining work and design priorities
 
@@ -548,7 +552,7 @@ Pruning remains disabled. Any future retention design must preserve every snapsh
 
 ### Portable deployment
 
-Scheduler and drill modules retain explicit Anubis integration. The process-inspection helper also needs a suitably protected privileged deployment. Review these assumptions before distributing the system beyond a trusted local environment.
+Scheduler and drill modules retain explicit Anubis integration. The process-inspection helper needs a suitably protected privileged deployment. The partial Work policy is local deployment data and is not included in the publication. Review these assumptions before distributing the system beyond a trusted local environment.
 
 ### Performance characterization
 
@@ -620,6 +624,7 @@ Read each operation receipt before claiming completion. A running state is not a
 | `tier_queue.py` | Background reviewed offload processing |
 | `requests_worker.py` | Persistent retrieval processing |
 | `scheduled.py` | Independent project-scope orchestration |
+| `work_partial.py` | Optional declared partial Work selection and source-map check |
 | `anubis_backup.py` | Extended Anubis scope and initial recovery checks |
 | `lock_recovery.py` | Conservative same-host stale-lock handling |
 | `health.py` | Read-only dashboard state assembly |

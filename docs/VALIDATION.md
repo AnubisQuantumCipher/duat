@@ -20,3 +20,8 @@ recovery. Deployment-specific operating records remain outside this repository.
 The privacy review checks publication files for personal deployment markers and
 credential patterns. Benchmark output, runtime credentials, raw private backend logs,
 and local operation reports are excluded from version control.
+
+The current source suite also checks opt-in backup roots outside the configured
+home, fixed-helper process inspection, and a synthetic partial Work scope with
+source-map verification. The partial-scope fixture does not establish complete
+Work coverage or a scheduled full restore.

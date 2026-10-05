@@ -55,6 +55,10 @@ The dashboard listens on loopback at `http://127.0.0.1:8767`. Background process
 uses explicit queue enrollment. There is no automatic cache discovery for deletion
 and no snapshot pruning.
 
+Backup sources outside the configured home require an explicit root allowlist.
+The scheduler can also record a declared partial Work scope when an operator supplies
+a private policy; that receipt never marks the older complete scope as healthy.
+
 ## Requirements and boundaries
 
 The runtime uses Python's standard library plus external Linux tools: Python with

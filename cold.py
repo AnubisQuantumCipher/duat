@@ -54,7 +54,7 @@ def inventory(root):
 
 def active_users(root):
     if os.geteuid() != 0:
-        check = subprocess.run(['sudo', '-n', '/usr/bin/python3', str(Path(__file__).resolve()), '--scan', str(root)],
+        check = subprocess.run(['sudo', '-n', '/usr/local/libexec/project-vault-active-users', '--scan', str(root)],
                                capture_output=True, text=True)
         if check.returncode:
             raise VaultError('Cannot complete read-only process inspection: ' + check.stderr.strip())

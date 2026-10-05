@@ -30,11 +30,21 @@ def main():
     for p in sorted(base.iterdir()):
      if p.name in ('anubis','anubis-lang','anubis-desktop'):continue
      scopes.append((p.name,'project-'+p.name,[str(p)]))
+   elif base.name=='Work' and v.cfg.get('work_partial_policy'):
+    scopes.append(('Work readable partial','project-Work-readable-partial',[str(base)]))
    else:scopes.append((base.name,'project-'+base.name,[str(base)]))
   failures=[]
   for name,tag,paths in scopes:
    try:
     v.online()
+    partial_manifest=None
+    if tag=='project-Work-readable-partial':
+     from work_partial import prepare
+     if health.get('project-Work',{}).get('state')!='incomplete':
+      raise VaultError('Original broad Work scope is not recorded INCOMPLETE')
+     paths,partial_manifest=prepare(v.config_path,Path(paths[0]),
+                                    Path(v.cfg['work_partial_policy']))
+     save_json(v.state/'work-partial-scheduled-plan.json',partial_manifest)
     if name=='Anubis':
      from anubis_backup import backup_anubis
      snap=backup_anubis()
@@ -43,8 +53,20 @@ def main():
      scoped.cfg.update(project_roots=[],additional_paths=paths,snapshot_tag=tag)
      try:
       snap=scoped.backup()
+      if partial_manifest is not None:
+       from work_partial import check_saved_map
+       check_saved_map(scoped,snap,partial_manifest)
+       partial_manifest.update(state='PASS_PARTIAL_SCOPE',snapshot=snap)
+       save_json(v.state/'work-partial-scheduled-plan.json',partial_manifest)
+       ipad_manifest=scoped.root/'Recovery/Partial-Scopes'/(snap+'.scheduled-manifest.json')
+       save_json(ipad_manifest,partial_manifest)
+       if json.loads(ipad_manifest.read_text())!=partial_manifest:
+        raise VaultError('Partial Work iPad manifest readback differs')
      finally:scoped.db.close()
-    health[tag]={'name':name,'state':'passed','snapshot':snap,'updated':now(),'verification':'snapshot saved and repository metadata checked'}
+    health[tag]={'name':name,'state':'passed','snapshot':snap,'updated':now(),
+                 'verification':('partial declared scope; snapshot and repository metadata checked; no scheduled full restore'
+                                 if partial_manifest is not None else
+                                 'snapshot saved and repository metadata checked')}
    except (VaultError,OSError) as e:
     message=str(e)
     if 'Another vault' in message or 'Another repository' in message or 'offline' in message or getattr(e,'exit_code',None)==11:

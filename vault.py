@@ -200,6 +200,12 @@ class Vault:
             if base.is_dir():
                 logical.extend(sorted(base.iterdir()))
         logical += [Path(p) for p in self.cfg.get('additional_paths', [])]
+        # Permit reviewed source roots outside home when named explicitly in config.
+        external = [Path(p) for p in self.cfg.get('allowed_external_roots', [])]
+
+        def inside_home(resolved):
+            return resolved.is_relative_to(Path(self.cfg['home'])) or any(resolved.is_relative_to(p) for p in external)
+
         records = []
         unique = set()
         for path in logical:
@@ -208,7 +214,7 @@ class Vault:
             resolved = path.resolve()
             if resolved == self.root or resolved.is_relative_to(self.mount):
                 raise VaultError('Backup source points into the iPad destination.')
-            if not resolved.is_relative_to(Path(self.cfg['home'])):
+            if not inside_home(resolved):
                 raise VaultError('Source resolves outside the configured home: ' + str(path))
             records.append({'logical': str(path), 'stored_path': str(resolved), 'symlink': path.is_symlink()})
             unique.add(str(resolved))
@@ -236,7 +242,7 @@ class Vault:
             if not path.exists():
                 continue
             resolved = path.resolve()
-            if not resolved.is_relative_to(Path(self.cfg['home'])) or resolved.is_relative_to(self.mount):
+            if not inside_home(resolved) or resolved.is_relative_to(self.mount):
                 raise VaultError('Discovered worktree/metadata is outside the configured home: ' + original)
             if str(resolved) not in unique:
                 records.append({'logical': original, 'stored_path': str(resolved), 'symlink': path.is_symlink(), 'kind': kind})

@@ -10,6 +10,8 @@ The repository contains source, synthetic test fixtures, generic configuration a
 service examples, and documentation. Runtime state, credentials, private configuration,
 archives, catalogs, and receipts are excluded. Credential file paths and runtime code
 that generates or reads passwords describe functionality; they are not secret values.
+The live deployment's partial Work policy contains path and diagnostic inventories;
+only its generic mechanism and a synthetic example are published.
 
 The review checked text artifacts for known personal/deployment markers, production
 identifiers, private-key blocks, common credential-token formats, and credentials in

@@ -1,0 +1,14 @@
+{
+  "schema": "project-vault.work-readable-partial.policy-v1",
+  "base": "/home/YOUR_USER/Work",
+  "original_scope": "project-Work",
+  "original_scope_state": "incomplete",
+  "reference_source": "/home/YOUR_USER/Work/readable-project",
+  "diagnostic_sha256": "REPLACE_WITH_LOCAL_DIAGNOSTIC_HASH",
+  "excluded_error_roots": {
+    "unreadable-project": ["permission_denied"]
+  },
+  "excluded_active_roots": {},
+  "excluded_name_prefixes": {},
+  "allowed_discovered_roots": []
+}
