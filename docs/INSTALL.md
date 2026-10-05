@@ -116,6 +116,9 @@ repositories and perform actual restic restore comparisons. They do not require 
 iPad. Cold-storage integration tests invoke the process inspection helper. Use an
 isolated Linux container or VM with root privileges when the host has no suitable
 helper policy. Do not weaken the production checks merely to pass tests.
+The GitHub Actions test job installs restic and the repository's fixed scanner as
+a root-owned executable on an ephemeral runner, then runs the same suite. It does
+not connect to or make claims about any production archive.
 
 ## Rendering the paper
 
