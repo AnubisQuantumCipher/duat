@@ -106,6 +106,22 @@ class VaultTests(unittest.TestCase):
         with self.assertRaises(module.VaultError):
             self.vault.online()
 
+    def test_external_source_requires_explicit_allowed_root(self):
+        with tempfile.TemporaryDirectory(prefix='vault-external-') as outside:
+            source = Path(outside) / 'project'
+            source.mkdir()
+            (source / 'evidence.txt').write_text('retained source')
+            (self.sources / 'external-project').symlink_to(source)
+            with self.assertRaises(module.VaultError):
+                self.vault.sources()
+            self.vault.cfg['allowed_external_roots'] = [str(Path(outside))]
+            roots, mapping = self.vault.sources()
+            self.assertIn(str(source), roots)
+            self.assertTrue(any(row['stored_path'] == str(source) for row in mapping))
+            self.vault.cfg['allowed_external_roots'] = [str(Path(outside) / 'other')]
+            with self.assertRaises(module.VaultError):
+                self.vault.sources()
+
     def test_external_worktree_and_common_git_are_discovered(self):
         project = self.sources / 'example'
         def git(*args):

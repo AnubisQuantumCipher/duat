@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from vault import Vault, VaultError
 import cold
 
 class ColdTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory(dir='/tmp'); self.h=Path(self.tmp.name)
+  cache=Path.home()/'.cache/workflow-tmp';cache.mkdir(parents=True,exist_ok=True)
+  self.tmp=tempfile.TemporaryDirectory(dir=cache); self.h=Path(self.tmp.name)
   self.src=self.h/'Projects/project/output'; self.src.mkdir(parents=True)
   (self.src/'proof.txt').write_text('evidence that must survive')
   (self.src/'run').write_text('executable bytes'); (self.src/'run').chmod(0o755)
@@ -19,6 +20,11 @@ class ColdTests(unittest.TestCase):
   self.v=Vault(self.c); self.v.initialize()
  def tearDown(self):
   self.v.db.close(); self.tmp.cleanup()
+ def test_nonroot_process_scan_uses_fixed_helper(self):
+  with patch('cold.os.geteuid', return_value=1000), patch('cold.subprocess.run', return_value=Mock(returncode=0, stdout='[]')) as run:
+   self.assertEqual(cold.active_users(self.src), [])
+  run.assert_called_once_with(['sudo', '-n', '/usr/local/libexec/project-vault-active-users', '--scan', str(self.src)],
+                              capture_output=True, text=True)
  def test_offload_and_get_exact(self):
   original=cold.inventory(self.src)
   entry=cold.put(self.v,self.src,True)

@@ -20,8 +20,8 @@ cd "$HOME/Projects/duat"
 python3 vault.py --help
 ```
 
-The private repository requires an account with access. To make `project-vault`
-available, create a launcher after checking that the destination is unused:
+The repository is public. To make `project-vault` available, create a launcher
+after checking that the destination is unused:
 
 ```bash
 mkdir -p "$HOME/.local/bin"
@@ -49,6 +49,22 @@ for your complete candidate and recovery scratch before use.
 adds explicit source paths. Review `project-vault sources` before backing up. No
 source exclusions are implied by a cache directory name.
 
+Resolved backup sources must stay under `home` unless their resolved paths are
+under an explicitly configured `allowed_external_roots` entry. This also applies
+to discovered Git worktrees and shared metadata. Use absolute, reviewed roots;
+the iPad mount remains forbidden as a source. The example allows none.
+
+The live deployment has a deliberately partial Work scope because some Work
+roots could not be read. For an equivalent local policy, set `work_partial_policy`
+to the absolute path of a private JSON policy based on
+`examples/work-partial-policy.example.json`. The scheduler requires the older
+`project-Work` health entry to remain `incomplete`, records every included and
+omitted top-level root, checks the saved source map, and publishes a manifest.
+Its `passed` status means only the declared partial scope was backed up and
+metadata checked; it is never a complete Work or full-restore claim. Without
+this option, the scheduler retains its original broad Work scope. Keep actual
+path inventories and diagnostic hashes outside the public checkout.
+
 For an empty, intended destination with working ifuse transport:
 
 ```bash
@@ -65,11 +81,13 @@ credentials; see `RECOVERY-BOOTSTRAP.md`.
 ## Process inspection
 
 `cold.active_users` scans Linux process metadata before retirement. A non-root caller
-invokes `sudo -n /usr/bin/python3 ABSOLUTE_CHECKOUT/cold.py --scan PATH`. If that
-inspection cannot complete, offload refuses. Configure an administrator-reviewed
-deployment for this helper before relying on offload. A privileged helper and its
-imported modules must be protected from modification by unprivileged callers; do
-not grant passwordless root execution to a user-writable checkout.
+invokes the fixed `/usr/local/libexec/project-vault-active-users` helper through
+`sudo -n`. An administrator must review and install `helpers/project-vault-active-users`
+as a root-owned, non-writable executable at that path, then authorize only that
+fixed helper in sudo policy. The helper uses the sudo caller's account home to
+limit scanned paths to its Projects, Work, and .cache trees. It refuses on an
+unreadable live process. If inspection cannot complete, offload refuses. Never
+authorize root execution of the checkout's user-writable Python files.
 
 No sudoers policy is included or installed by this repository. Backup, offline
 catalog search, and documentation inspection can be used without enabling offload.

@@ -1,0 +1,66 @@
+#!/usr/bin/python3 -I
+"""Read-only process scan for a reviewed project-vault offload.
+
+Install this file as root-owned, mode 0755, outside a user-writable checkout.
+"""
+import json
+import os
+from pathlib import Path
+import pwd
+import sys
+
+
+def refuse(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
+
+def active_users(root):
+    owner = root.stat().st_uid
+    name = str(root)
+    hits = []
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit() or int(proc.name) == os.getpid():
+            continue
+        try:
+            if proc.stat().st_uid not in (owner, 0):
+                continue
+            links = [proc / 'cwd', proc / 'exe'] + list((proc / 'fd').iterdir())
+            for link in links:
+                try:
+                    target = os.readlink(link).removesuffix(' (deleted)')
+                except FileNotFoundError:
+                    continue
+                if target == name or target.startswith(name + '/'):
+                    hits.append(proc.name)
+                    break
+            if name + '/' in (proc / 'maps').read_text(errors='replace'):
+                hits.append(proc.name)
+        except FileNotFoundError:
+            continue
+        except PermissionError:
+            if proc.exists():
+                refuse('Cannot inspect process ' + proc.name)
+    return sorted(set(hits))
+
+
+if __name__ == '__main__':
+    if os.geteuid() != 0:
+        refuse('must run as root')
+    if len(sys.argv) != 3 or sys.argv[1] != '--scan':
+        refuse('usage: project-vault-active-users --scan ABSOLUTE_PATH')
+    try:
+        invoking_uid = int(os.environ['SUDO_UID'])
+        home = Path(pwd.getpwuid(invoking_uid).pw_dir)
+    except (KeyError, ValueError):
+        refuse('sudo caller identity is required')
+    raw = sys.argv[2]
+    path = Path(raw)
+    if not path.is_absolute() or os.path.normpath(raw) != raw or '..' in path.parts:
+        refuse('path must be absolute and normalized')
+    if not any(path != base and path.is_relative_to(base)
+               for base in (home / 'Projects', home / 'Work', home / '.cache')):
+        refuse('path outside allowed working roots')
+    if not os.path.lexists(path) or path.resolve() != path:
+        refuse('path does not exist or traverses a symlink')
+    print(json.dumps(active_users(path)))
