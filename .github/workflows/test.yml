@@ -1,0 +1,24 @@
+name: Test DUAT
+
+"on":
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependencies and fixed process scanner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y restic
+          sudo install -D -o root -g root -m 0755 helpers/project-vault-active-users /usr/local/libexec/project-vault-active-users
+          restic version
+      - name: Run isolated repository and offload tests
+        run: python3 -m unittest discover -v
