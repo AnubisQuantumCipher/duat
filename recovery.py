@@ -8,7 +8,7 @@ import uuid
 from vault import VaultError, now, save_json
 from verify_kit import verify
 
-RUNTIME = ('vault.py', 'cold.py', 'pins.py', 'recovery.py', 'verify_kit.py',
+RUNTIME = ('vault.py', 'cold.py', 'pins.py', 'recovery.py', 'verify_kit.py', 'background_policy.py',
            'provenance.py', 'queue_store.py', 'tier_queue.py', 'requests_worker.py',
            'scheduled.py', 'anubis_backup.py', 'lock_recovery.py', 'health.py',
            'dashboard.py', 'dashboard.html', 'scrub.py', 'drill.py', 'bench.py', 'bench.html')
@@ -86,6 +86,10 @@ def export_kit(vault):
         for file in sorted((home / '.config/systemd/user').glob('project-vault-*')):
             if file.is_file():
                 files['Services/' + file.name] = file.read_bytes()
+            elif file.is_dir() and file.name.endswith('.service.d'):
+                for dropin in sorted(file.iterdir()):
+                    if dropin.suffix == '.conf' and dropin.is_file():
+                        files['Services/' + file.name + '/' + dropin.name] = dropin.read_bytes()
         for name in ('ipad-storage.service',):
             file = home / '.config/systemd/user' / name
             if file.is_file(): files['Services/' + name] = file.read_bytes()

@@ -7,6 +7,7 @@ from pathlib import Path
 from vault import Vault, VaultError, now, save_json
 from cold import put, items
 from queue_store import edit,update
+from background_policy import permit
 
 
 def main():
@@ -16,6 +17,7 @@ def main():
         except BlockingIOError:return
         attempted=set()
         while True:
+            if not permit(v,'tier'):return
             if (v.state/'offload-paused').exists():print('PAUSED after completed item',flush=True);return
             for p in (v.state/'requests').glob('*.json'):
                 request=json.loads(p.read_text())

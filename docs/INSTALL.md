@@ -39,6 +39,14 @@ it before use. Every filesystem path must be absolute; the loader does not expan
 `mount` must name the actual ifuse mount, and `root` must be inside it. Keep
 `require_ifuse_mount` enabled for device use.
 
+`background_policy.coordination_files` optionally lists absolute paths to build
+coordination JSON files. Each configured file must contain `{"status":"released"}`
+before background maintenance is eligible to start. Missing, unreadable, malformed,
+reserved or unknown records defer it. The example lists none; do not copy another
+machine's paths or write `released` while its owner is still working. Independently,
+the policy checks known compiler/prover process names, pending retrievals, and the
+vault operation lock. It observes readiness and does not reserve future idle time.
+
 Choose a fresh `vault_id` for a new archive. It must match the destination's
 `.vault-id` for an existing archive. Keep `state` on Linux. `reserve_bytes` protects
 archive space; `local_reserve_bytes` protects Linux working space during offload
@@ -98,6 +106,15 @@ catalog search, and documentation inspection can be used without enabling offloa
 Review and install selected units under `~/.config/systemd/user`, then run
 `systemctl --user daemon-reload`. Enable only the units you have configured.
 
+The backup, tier, scrub and drill service examples run `background_policy.py` as an
+`ExecCondition`. Exit status 1 skips that activation; a later timer activation
+checks again. They also set low CPU scheduling weight, nice priority and idle I/O
+priority. These settings reduce contention where supported; they are not bandwidth
+or latency guarantees. Retrieval service priority and timer intervals are unchanged.
+Backup and tier workers also check between complete scopes/items. Direct manual
+commands keep their existing behavior, and an operation already in progress finishes
+normally. Inspect `state/background-KIND.json` or the service journal for a deferral.
+
 The `ipad-storage.service` dependency names the original external mount supervisor;
 its implementation is not included. Supply your own transport supervision.
 `scheduled.py`, `anubis_backup.py`, and `drill.py` retain Anubis source paths, scope
@@ -108,6 +125,56 @@ configured source scope. Dashboard actions expect the corresponding worker units
 `skills/project-vault/` includes a publication-safe agent skill, references,
 storage-status script, and interface metadata. Configure and authorize it according
 to the receiving operator's policy before installing it.
+
+## Upgrading an existing installation
+
+The supported source installation tracks this repository's `main` branch; no package
+manager or release tag is required. Check the Git revision with `git rev-parse HEAD`.
+Preserve private configuration, credentials, pins, queues, provenance and receipts;
+never replace them with the example configuration or run `init` for an existing archive.
+
+Choose a maintenance gap. Stop future activations of the timers you installed and
+record which were active so only those are resumed. Stopping a timer does not stop
+its running service. Let all existing vault jobs, including manual commands and
+retrievals, finish normally before changing their runtime files. Do not kill a
+transfer, clear locks or restart a busy worker to perform this upgrade.
+
+For an unmodified checkout on `main`, after those jobs finish:
+
+```bash
+git -C "$HOME/Projects/duat" status --short
+git -C "$HOME/Projects/duat" pull --ff-only origin main
+python3 "$HOME/Projects/duat/vault.py" find --help
+```
+
+Keep local adaptations on a separate branch and reconcile them instead of resetting
+them. Update the whole runtime together: `scheduled.py`, `tier_queue.py` and the
+recovery kit now require `background_policy.py`. Copying only `vault.py` is insufficient.
+
+Compare the service examples with your installed units and drop-ins. Preserve your
+transport dependencies and custom paths. If your units still exactly match the old
+examples and use the documented checkout path, install the updated maintenance units:
+
+```bash
+for kind in backup tier scrub drill; do
+  install -m 0644 "$HOME/Projects/duat/examples/systemd/project-vault-$kind.service" \
+    "$HOME/.config/systemd/user/project-vault-$kind.service"
+done
+systemctl --user daemon-reload
+systemctl --user cat project-vault-backup.service project-vault-tier.service
+```
+
+For custom units, carry over the corresponding `ExecCondition`, `CPUWeight`, `Nice`
+and `IOScheduling*` settings explicitly; inspect effective drop-ins with `systemctl
+--user cat`. Resume only your previously enabled timers after validation. Restart a
+dashboard service only when it has no active requests, then export a new recovery kit
+when the archive is available. Recovery exports now include service `.conf` drop-ins
+as well as the new helper. Old recovery kits remain historical snapshots.
+
+No additional configuration is needed for process/retrieval/lock-based deferral.
+Optional coordination files must be set up with their build owner. For storage relief,
+follow [inactive-output enrollment](OFFLOAD.md); upgrading or running more backups
+alone does not reclaim local bytes.
 
 ## Testing
 

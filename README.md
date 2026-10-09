@@ -16,6 +16,8 @@ publicly available on GitHub.
 - [Architecture white paper](docs/DUAT-Vault-Architecture-White-Paper.md)
 - [Standalone HTML reading edition](docs/DUAT-Vault-Architecture-White-Paper.html) — download and open locally
 - [Installation and configuration](docs/INSTALL.md)
+- [Choose and enroll inactive outputs](docs/OFFLOAD.md)
+- [Upgrade an existing installation](docs/INSTALL.md#upgrading-an-existing-installation)
 - [Original operator manual](docs/OPERATOR-MANUAL.md)
 - [Replacement-machine recovery](RECOVERY-BOOTSTRAP.md)
 - [Project Vault agent skill](skills/project-vault/SKILL.md)
@@ -54,6 +56,17 @@ project-vault get ITEM_ID --to "$HOME/Work/recovered-output"
 The dashboard listens on loopback at `http://127.0.0.1:8767`. Background processing
 uses explicit queue enrollment. There is no automatic cache discovery for deletion
 and no snapshot pruning.
+
+Backups preserve local originals; they do not free Linux space. To reclaim storage,
+identify an inactive, reproducible directory, record its real source and rebuild
+context, and explicitly enroll it for verified offload. The [offload guide](docs/OFFLOAD.md)
+explains how to narrow a build directory without retiring its compiler binaries or evidence.
+
+Background service examples defer when a compiler/prover, requested retrieval, or
+another vault operation is observed. Backup and offload workers recheck between
+complete scopes/items, and maintenance runs at low scheduling priority. This is
+cooperative scheduling: it never interrupts an in-flight operation and cannot
+guarantee that a new build will not overlap one already running.
 
 Backup sources outside the configured home require an explicit root allowlist.
 The scheduler can also record a declared partial Work scope when an operator supplies

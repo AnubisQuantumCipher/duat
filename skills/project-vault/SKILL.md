@@ -53,6 +53,17 @@ available. `get` to the original location requires that path to be absent. A reg
 path is new state; recover elsewhere. Never replace a historical artifact with a newly
 built one while claiming it was recovered, or execute recovered scripts merely to test access.
 
+When another vault operation owns the lock, `find PATTERN --online --wait-lock`
+waits for it and revalidates the device before searching. Do not remove locks or
+restart their owners. Background maintenance defers around observed builds and
+retrievals, with checks between backup scopes/offload items; this is cooperative
+scheduling, not a guarantee of future idle time.
+
+Backups alone free no local storage. Use the repository's
+[inactive-output guide](https://github.com/AnubisQuantumCipher/duat/blob/main/docs/OFFLOAD.md) to establish eligibility and explicit
+queue enrollment. A queued candidate is not reclaimed space, and a historical
+offload receipt does not cover regenerated files at the same path.
+
 ## Boundaries and handoff
 
 Use local Linux storage for active builds and restored files. The app mount is an

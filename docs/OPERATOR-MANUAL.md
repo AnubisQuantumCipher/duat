@@ -23,10 +23,16 @@ project-vault backup
 project-vault list
 project-vault find example-output
 project-vault find '*Cargo.toml*' --online
+project-vault find '*Cargo.toml*' --online --wait-lock
 ```
 
 The local catalog is intentionally incomplete. An offline miss does not establish
 absence from the archive. Use online search or a known item/snapshot when available.
+`--wait-lock` waits for the existing exclusive vault lock instead of failing when
+busy, then rechecks device identity before searching. It requires `--online`.
+Without it, the busy behavior remains nonblocking. Cancelling a waiting query does
+not release the current owner's lock. An acquired search still holds the normal
+lock for its duration; neither this option nor repeated retries bypass it.
 
 ## Archive and recover
 
@@ -47,11 +53,23 @@ and compared. Do not use it to retire active build outputs.
 
 ## Background work and health
 
+Backups preserve local files. Only a completed verified offload reclaims them.
+Use the [inactive-output guide](OFFLOAD.md) to select a narrow eligible candidate,
+preserve its source and record genuine provenance before enrollment.
+
 Record source/toolchain/regeneration context with `project-vault provenance` before
 explicit queue enrollment. Workers process reviewed entries; they do not automatically
 select arbitrary cache directories. The dashboard listens on loopback and depends on
 configured worker units. Inspect per-scope results and receipt timestamps, not just
 service enablement. Anubis-specific scheduler scopes need adaptation for other projects.
+
+Background maintenance yields when it observes an active compiler/prover, an unreleased
+configured coordination file, a pending retrieval or a busy vault lock. Malformed or
+unreadable scheduling records defer it too. Deferral does not mean a backup or offload
+completed. Read `state/background-KIND.json` and the service journal for the reason.
+Existing transfers finish; subsequent scopes/items wait for a later activation.
+The checks are cooperative, so new work can start after a check. Low service priority
+reduces contention but does not establish exclusive build admission.
 
 ```bash
 project-vault audit
