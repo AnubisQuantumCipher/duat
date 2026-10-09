@@ -25,3 +25,28 @@ The current source suite also checks opt-in backup roots outside the configured
 home, fixed-helper process inspection, and a synthetic partial Work scope with
 source-map verification. The partial-scope fixture does not establish complete
 Work coverage or a scheduled full restore.
+
+## Background cooperation and lock waiting
+
+The public patch passed `python3 -m unittest discover -v`: **61 tests, OK** on
+Linux/aarch64 with the fixed process-inspection helper and disposable local restic
+repositories. `TMPDIR` was placed beneath the user's `.cache` so the existing
+scanner path policy applied unchanged. No assertions or production guards were
+disabled. The backup, tier, scrub and drill service examples passed
+`systemd-analyze --user verify` in a valid user runtime environment; CLI help for
+the vault, find, bench and background policy also exited successfully.
+
+Regressions exercise deferral for busy locks, active compiler/prover names,
+unreleased or malformed coordination records, pending or malformed retrievals and
+unreadable retrieval storage. They check that deferral leaves the existing lock
+owner and pending queue untouched. Separate processes exercise lock waiting,
+cancellation and normal exclusion after acquisition. Mocked CLI tests check that
+device revalidation precedes repository access and that changed identity refuses
+access. Recovery tests compare exported service drop-in bytes and retain the
+previous tamper and failed-export checks.
+
+These checks establish the tested cooperative behavior. They do not establish
+atomic build exclusion, zero contention, successful production offload or recovery,
+or the effectiveness of every scheduler setting on every host. Source backup,
+candidate classification, complete candidate restore comparison and final retirement
+remain distinct requirements.

@@ -42,6 +42,9 @@ Do not run forget, prune, repair, or force-unlock as a shortcut around an error.
 ## Reconstitute the wrapper on a replacement Linux environment
 
 The kit includes Tools, Services, configuration, item receipts, pins and provenance.
+New kits also carry the background scheduling helper and service `.conf` drop-ins.
+Review restored coordination-file paths and overrides for the replacement machine;
+a missing configured coordination file correctly defers background work.
 Keep the recovered kit unchanged as an inspection copy. Stage Tools in a new local
 working directory. Review configuration home/state/mount/root and vault identity
 against the actual replacement machine; changing a path must not change which archive

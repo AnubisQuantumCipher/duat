@@ -111,10 +111,10 @@ class Vault:
                 raise VaultError('Vault identity does not match; refusing repository access.')
 
     @contextlib.contextmanager
-    def locked(self):
+    def locked(self, *, wait=False):
         with (self.state / 'operation.lock').open('a') as lock:
             try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(lock, fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
             except BlockingIOError:
                 raise VaultError('Another vault operation is running.')
             yield
@@ -416,6 +416,8 @@ def main():
     bench_parser.add_argument('--pattern', choices=['incompressible','compressible'], default='incompressible')
     audit = sub.add_parser('audit'); audit.add_argument('--online', action='store_true')
     find = sub.add_parser('find'); find.add_argument('query'); find.add_argument('--online', action='store_true')
+    find.add_argument('--wait-lock', action='store_true',
+                      help='Wait to acquire the vault operation lock; requires --online.')
     put = sub.add_parser('put'); put.add_argument('path'); put.add_argument('--offload', action='store_true'); put.add_argument('--retain-binaries', action='store_true')
     get = sub.add_parser('get'); get.add_argument('item'); get.add_argument('--to')
     for name in ('pin', 'unpin', 'queue'):
@@ -427,6 +429,8 @@ def main():
     restore = sub.add_parser('restore')
     restore.add_argument('snapshot'); restore.add_argument('path'); restore.add_argument('--to', required=True)
     args = parser.parse_args()
+    if args.action == 'find' and args.wait_lock and not args.online:
+        parser.error('find --wait-lock requires --online')
     vault = Vault(args.config)
     result = None
     if args.action == 'status': result = vault.status()
@@ -452,7 +456,10 @@ def main():
     elif args.action == 'find':
         if args.online:
             vault.online()
-            with vault.locked():
+            with vault.locked(wait=args.wait_lock):
+                # Device/mount identity may have changed while waiting.
+                if args.wait_lock:
+                    vault.online()
                 result = json.loads(vault.run('find', '--json', '--', args.query, capture=True))
         else: result = vault.search(args.query)
     elif args.action in ('put', 'get', 'items'):

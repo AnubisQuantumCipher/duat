@@ -48,7 +48,10 @@ class PolishTests(unittest.TestCase):
   with patch.object(self.v,'online'),patch.object(self.v,'run',side_effect=e):result=scrub(self.v)
   self.assertEqual(result['state'],'waiting')
  def test_kit_roundtrip_tamper_and_failure_keep_previous_pointer(self):
+  dropin=self.home/'.config/systemd/user/project-vault-backup.service.d/50-background-cooperation.conf'
+  dropin.parent.mkdir(parents=True);dropin.write_text('[Service]\nNice=19\n')
   self.v.initialize();result=export_kit(self.v);folder=Path(result['path'])
+  self.assertEqual((folder/'Services/project-vault-backup.service.d/50-background-cooperation.conf').read_bytes(),dropin.read_bytes())
   self.assertEqual(verify(folder)['state'],'passed');self.assertEqual(export_kit(self.v)['state'],'unchanged')
   pointer=self.v.root/'Recovery/latest-kit.json';previous=pointer.read_bytes()
   (folder/'Tools/vault.py').write_text('broken');self.assertEqual(verify(folder)['state'],'failed')

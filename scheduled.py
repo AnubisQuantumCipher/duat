@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 from vault import Vault,VaultError,save_json,now
 from health import read_json
+from background_policy import permit
 
 
 def main():
@@ -13,6 +14,7 @@ def main():
  with (v.state/'scheduler.lock').open('a') as scheduler:
   try:fcntl.flock(scheduler,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:return
+  if not permit(v,'backup'):return
   try:
    v.online()
    with v.locked():
@@ -35,6 +37,7 @@ def main():
    else:scopes.append((base.name,'project-'+base.name,[str(base)]))
   failures=[]
   for name,tag,paths in scopes:
+   if not permit(v,'backup'):return
    try:
     v.online()
     partial_manifest=None
@@ -77,6 +80,7 @@ def main():
     failures.append(name)
     print('SCOPE INCOMPLETE: '+name+': '+message,flush=True)
    finally:save_json(health_file,health)
+  if not permit(v,'backup'):return
   try:
    v.online();save_json(v.root/'Recovery/project-health.json',health)
   except (VaultError,OSError):pass

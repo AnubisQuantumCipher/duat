@@ -6,10 +6,16 @@
   "root": "/home/YOUR_USER/iPad/TryOmarchy",
   "vault_id": "REPLACE_WITH_YOUR_VAULT_ID",
   "require_ifuse_mount": true,
-  "project_roots": ["/home/YOUR_USER/Projects", "/home/YOUR_USER/Work"],
+  "project_roots": [
+    "/home/YOUR_USER/Projects",
+    "/home/YOUR_USER/Work"
+  ],
   "allowed_external_roots": [],
   "additional_paths": [],
   "reserve_bytes": 10000000000,
   "local_reserve_bytes": 10000000000,
-  "wait_for_scripts": []
+  "wait_for_scripts": [],
+  "background_policy": {
+    "coordination_files": []
+  }
 }

@@ -4,9 +4,11 @@ After=ipad-storage.service
 
 [Service]
 Type=oneshot
+ExecCondition=/usr/bin/python3 %h/Projects/duat/background_policy.py --kind tier
 ExecStart=/usr/bin/python3 %h/Projects/duat/tier_queue.py
 TimeoutStartSec=infinity
-Nice=10
-IOSchedulingClass=best-effort
-IOSchedulingPriority=7
+CPUWeight=10
+Nice=19
+IOSchedulingClass=idle
+IOSchedulingPriority=0
 UMask=0077
